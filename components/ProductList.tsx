@@ -52,6 +52,10 @@ const ProductList: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Produtos</Text>
+       {/* Botão para ir para a página de login */}
+       <Link href="/(tabs)/login" style={styles.loginButton}>
+        <Text style={styles.loginButtonText}>Acessar Login</Text>
+      </Link>
       <FlatList
         data={products}
         renderItem={renderItem}
@@ -196,6 +200,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  loginButton: {
+    backgroundColor: '#007b5e',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignSelf: 'flex-end',
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
 });
 
 export default ProductList;

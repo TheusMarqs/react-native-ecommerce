@@ -1,15 +1,45 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
+import axios from 'axios';
+import { saveUserData } from '../services/cookie_service';
 
-const register: React.FC = () => {
+const Register: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleRegister = () => {
-    if (username && email && password) {
-      Alert.alert('Cadastro realizado com sucesso!', 'Bem-vindo(a)!');
+
+  // Função para realizar o registro via API
+  const handleRegister = async () => {
+    if (username && email && firstName && lastName && password) {
+      try {
+        // Envia os dados para a API
+        const response = await axios.post('http://127.0.0.1:8000/auth/register', {
+          username,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          password,
+        });
+
+        console.log(response);
+
+        if (response.status === 201) {
+          var userData = response.data;
+
+          await saveUserData(userData);
+
+          router.dismissAll();
+          router.replace('/(tabs)/');
+
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Falha ao cadastrar. Tente novamente mais tarde.');
+        console.error(error);
+      }
     } else {
       Alert.alert('Erro', 'Preencha todos os campos para se cadastrar.');
     }
@@ -24,6 +54,18 @@ const register: React.FC = () => {
         placeholder="Nome de usuário"
         value={username}
         onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Primeiro nome"
+        value={firstName}
+        onChangeText={setFirstName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Sobrenome"
+        value={lastName}
+        onChangeText={setLastName}
       />
       <TextInput
         style={styles.input}
@@ -95,4 +137,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default register;
+export default Register;

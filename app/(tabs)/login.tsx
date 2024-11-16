@@ -3,15 +3,15 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
 const login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
     // Substitua com a lógica de autenticação
-    if (email === '' || password === '') {
+    if (username === '' || password === '') {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
     } else {
-      Alert.alert('Bem-vindo!', `Usuário ${email} logado com sucesso.`);
+      Alert.alert('Bem-vindo!', `Usuário ${username} logado com sucesso.`);
     }
   };
 
@@ -22,12 +22,12 @@ const login: React.FC = () => {
       
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Username"
         placeholderTextColor="#aaa"
         keyboardType="email-address"
         autoCapitalize="none"
-        onChangeText={setEmail}
-        value={email}
+        onChangeText={setUsername}
+        value={username}
       />
 
       <TextInput

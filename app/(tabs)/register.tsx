@@ -17,33 +17,36 @@ const Register: React.FC = () => {
     if (username && email && firstName && lastName && password) {
       try {
         // Envia os dados para a API
-        const response = await axios.post('http://127.0.0.1:8000/auth/register', {
-          username,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          password,
-        });
+        const response = await axios.post(
+          'http://127.0.0.1:8000/auth/register',
+          {
+            'username': username,
+            'email': email,
+            'first_name': firstName,
+            'last_name': lastName,
+            'password': password,
+          },
+        );
 
         console.log(response);
 
         if (response.status === 201) {
-          var userData = response.data;
+          const userData = response.data;
 
           await saveUserData(userData);
 
           router.dismissAll();
           router.replace('/(tabs)/');
-
         }
       } catch (error) {
         Alert.alert('Erro', 'Falha ao cadastrar. Tente novamente mais tarde.');
         console.error(error);
       }
     } else {
-      Alert.alert('Erro', 'Preencha todos os campos para se cadastrar.');
+      console.error('Preencha todos os campos');
     }
   };
+
 
   return (
     <View style={styles.container}>

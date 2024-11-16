@@ -1,17 +1,57 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import axios from 'axios';
+import { saveUserData } from '../services/cookie_service';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 const login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('error'); // Para controlar se o alerta é de sucesso ou erro
 
-  const handleLogin = () => {
-    // Substitua com a lógica de autenticação
-    if (username === '' || password === '') {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+  const handleLogin = async () => {
+    if (username && password) {
+      try {
+        const response = await axios.post(
+          'http://127.0.0.1:8000/auth/login',
+          {
+            'username': username,
+            'password': password
+          },
+          {
+            // Não rejeita a Promise em casos de erro HTTP
+            validateStatus: (status) => status >= 200 && status < 300 // ou definir os códigos de status que você deseja tratar
+          }
+        );
+
+        console.log(response);
+        console.log(response.status)
+
+        if (response.status === 200) {
+          const userData = response.data;
+          await saveUserData(userData);
+          router.dismissAll();
+          router.replace('/(tabs)/');
+
+        } else if (response.status === 401) {
+          setAlertType('error');
+          setAlertMessage('Credenciais incorretas. Tente novamente.');
+          setShowAlert(true);
+        }
+      } catch (error) {
+        console.error(error);
+        setAlertType('error');
+        setAlertMessage('Ocorreu um erro. Tente novamente mais tarde.');
+        setShowAlert(true);
+      }
     } else {
-      Alert.alert('Bem-vindo!', `Usuário ${username} logado com sucesso.`);
+      console.error('Preencha todos os campos');
+      setAlertType('error');
+      setAlertMessage('Por favor, preencha todos os campos.');
+      setShowAlert(true);
     }
   };
 
@@ -19,7 +59,7 @@ const login: React.FC = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Bem-vindo de volta!</Text>
       <Text style={styles.subtitle}>Faça login para continuar</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -46,6 +86,20 @@ const login: React.FC = () => {
       <Link href="/register" style={styles.registerLink}>
         <Text style={styles.registerLinkText}>Não tem uma conta? Cadastre-se</Text>
       </Link>
+
+      {/* Alerta de Sucesso ou Erro */}
+      <AwesomeAlert
+        show={showAlert}
+        title={alertType === 'success' ? 'Sucesso!' : 'Erro!'}
+        message={alertMessage}
+        closeOnTouchOutside={true}
+        closeOnHardwareBackPress={false}
+        showCancelButton={false}
+        showConfirmButton={true}
+        confirmText="OK"
+        confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
+        onConfirmPressed={() => setShowAlert(false)}
+      />
     </View>
   );
 };
@@ -95,13 +149,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  signupButton: {
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    color: '#007b5e',
-    fontSize: 16,
   },
   registerLink: {
     marginTop: 15,

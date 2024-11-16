@@ -6,14 +6,18 @@ export const saveUserData = async (userData: any) => {
 
       if (Platform.OS === 'web') {
         // Salvar cada informação nos cookies
+        console.log(userData)
+        saveCookie('id', userData.user_id);
         saveCookie('username', userData.username);
         saveCookie('email', userData.email);
-        saveCookie('authToken', userData.access_token);
+        saveCookie('access_token', userData.access_token);
+        saveCookie('refresh_token', userData.refresh_token);
 
-        // Recuperar e exibir os cookies logo após salvar
+        console.log('ID:', getCookie('id'));
         console.log('Username cookie:', getCookie('username'));
         console.log('Email cookie:', getCookie('email'));
-        console.log('Auth Token cookie:', getCookie('authToken'));
+        console.log('Access token cookie:', getCookie('access_token'));
+        console.log('Refresh Token cookie:', getCookie('refresh_token'));
 
         console.log('Informações salvas com sucesso');
 
@@ -21,10 +25,12 @@ export const saveUserData = async (userData: any) => {
       }
       else {
         // Salvar cada informação no SecureStore
+        await SecureStore.setItemAsync('id', userData.user_id);
         await SecureStore.setItemAsync('username', userData.username);
         await SecureStore.setItemAsync('email', userData.email);
-        // Exemplo de token, substitua pelo seu token real após o login
-        await SecureStore.setItemAsync('authToken', userData.access_token);
+        await SecureStore.setItemAsync('access_token', userData.access_token);
+        await SecureStore.setItemAsync('refresh_token', userData.refresh_token);
+
         console.log('Informações salvas com sucesso');
       }
 
@@ -33,11 +39,16 @@ export const saveUserData = async (userData: any) => {
     }
   };
 
-export const saveCookie = (name: string, value: string) => {
-    document.cookie = `${name}=${value}; path=/; Secure; HttpOnly; SameSite=Strict`;
+const saveCookie = (name: string, value: string) => {
+  console.log('fera')
+  document.cookie = `${name}=${value}; path=/; Secure; SameSite=Strict`;
 };
 
-export const getCookie = (name: string) => {
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
+
+const getCookie = (name: string) => {
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
     for (let i = 0; i < ca.length; i++) {

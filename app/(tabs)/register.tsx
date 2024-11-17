@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
-import { saveUserData } from '../services/cookie_service';
+import { saveUserData } from '../services/CookieService';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 const Register: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -10,43 +11,86 @@ const Register: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
+  // Função para validar o formato de email
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Função para realizar o registro via API
   const handleRegister = async () => {
-    if (username && email && firstName && lastName && password) {
-      try {
-        // Envia os dados para a API
-        const response = await axios.post(
-          'http://127.0.0.1:8000/auth/register',
-          {
-            'username': username,
-            'email': email,
-            'first_name': firstName,
-            'last_name': lastName,
-            'password': password,
-          },
-        );
+    if (!username || !email || !firstName || !lastName || !password) {
+      setAlertMessage('Por favor, preencha todos os campos.');
+      setShowAlert(true);
+      return;
+    }
 
-        console.log(response);
+    if (username.length < 4) {
+      setAlertMessage('O nome de usuário deve ter no mínimo 4 caracteres.');
+      setShowAlert(true);
+      return;
+    }
 
-        if (response.status === 201) {
-          const userData = response.data;
+    if (!isValidEmail(email)) {
+      setAlertMessage('Por favor, insira um email válido.');
+      setShowAlert(true);
+      return;
+    }
 
-          await saveUserData(userData);
+    if (password.length < 8) {
+      setAlertMessage('A senha deve ter no mínimo 8 caracteres.');
+      setShowAlert(true);
+      return;
+    }
 
-          router.dismissAll();
-          router.replace('/(tabs)/');
+    try {
+      // Envia os dados para a API
+      const response = await axios.post(
+        'http://127.0.0.1:8000/auth/register',
+        {
+          username,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          password,
+        },
+        {
+          // Permite tratar os erros manualmente
+          validateStatus: () => true,
         }
-      } catch (error) {
-        Alert.alert('Erro', 'Falha ao cadastrar. Tente novamente mais tarde.');
-        console.error(error);
+      );
+
+      console.log(response);
+
+      if (response.status === 201) {
+        const userData = response.data;
+
+        await saveUserData(userData);
+
+        router.dismissAll();
+        router.replace('/(tabs)/');
       }
-    } else {
-      console.error('Preencha todos os campos');
+
+      else {
+        var error = response.data.error
+
+        if (error == 'Erro desconhecido: UNIQUE constraint failed: auth_user.username') {
+          setAlertMessage('Este nome de usuário ja esta em uso.')
+        }
+        else {
+          setAlertMessage(error);
+        }
+        setShowAlert(true);
+      }
+    } catch (error) {
+      setAlertMessage('Falha ao cadastrar. Tente novamente mais tarde.');
+      setShowAlert(true);
+      console.error(error);
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -55,24 +99,28 @@ const Register: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Nome de usuário"
+        placeholderTextColor="#aaa"
         value={username}
         onChangeText={setUsername}
       />
       <TextInput
         style={styles.input}
         placeholder="Primeiro nome"
+        placeholderTextColor="#aaa"
         value={firstName}
         onChangeText={setFirstName}
       />
       <TextInput
         style={styles.input}
         placeholder="Sobrenome"
+        placeholderTextColor="#aaa"
         value={lastName}
         onChangeText={setLastName}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#aaa"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -80,6 +128,7 @@ const Register: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Senha"
+        placeholderTextColor="#aaa"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -92,6 +141,20 @@ const Register: React.FC = () => {
       <Link href="/(tabs)/login" style={styles.loginLink}>
         <Text style={styles.loginLinkText}>Já possui uma conta? Faça login</Text>
       </Link>
+
+      {/* Alerta de Erro */}
+      <AwesomeAlert
+        show={showAlert}
+        title="Erro!"
+        message={alertMessage}
+        closeOnTouchOutside={true}
+        closeOnHardwareBackPress={false}
+        showCancelButton={false}
+        showConfirmButton={true}
+        confirmText="OK"
+        confirmButtonColor="#F44336"
+        onConfirmPressed={() => setShowAlert(false)}
+      />
     </View>
   );
 };
@@ -111,12 +174,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    padding: 10,
     backgroundColor: '#fff',
-    borderRadius: 5,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   registerButton: {
     backgroundColor: '#007b5e',

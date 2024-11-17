@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
-import { saveUserData } from '../services/cookie_service';
+import { saveUserData } from '../services/CookieService';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 const login: React.FC = () => {
@@ -17,28 +17,28 @@ const login: React.FC = () => {
       try {
         const response = await axios.post(
           'http://127.0.0.1:8000/auth/login',
+          { username, password },
           {
-            'username': username,
-            'password': password
-          },
-          {
-            // Não rejeita a Promise em casos de erro HTTP
-            validateStatus: (status) => status >= 200 && status < 300 // ou definir os códigos de status que você deseja tratar
+            // Permite tratar os erros manualmente
+            validateStatus: () => true,
           }
         );
-
+  
         console.log(response);
-        console.log(response.status)
-
+        console.log(response.status);
+  
         if (response.status === 200) {
           const userData = response.data;
           await saveUserData(userData);
           router.dismissAll();
           router.replace('/(tabs)/');
-
         } else if (response.status === 401) {
           setAlertType('error');
           setAlertMessage('Credenciais incorretas. Tente novamente.');
+          setShowAlert(true);
+        } else {
+          setAlertType('error');
+          setAlertMessage('Erro inesperado. Por favor, tente novamente.');
           setShowAlert(true);
         }
       } catch (error) {

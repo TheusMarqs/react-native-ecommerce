@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
+import { getCookie } from '../services/CookieService';
+import { getNewAccessToken } from '../services/TokenService';
+import { router } from 'expo-router';
 
 const createProduct: React.FC = () => {
     const [name, setName] = useState('');
@@ -10,29 +13,73 @@ const createProduct: React.FC = () => {
     const [stock, setStock] = useState('');
     const [barCode, setBarCode] = useState('');
     const [qrCode, setQrCode] = useState('');
-    const [category, setCategory] = useState<string>(''); // Inicializando como string
-    const [categories, setCategories] = useState<any[]>([]); // Estado para armazenar as categorias
-    const [image, setImage] = useState<any>(null); // Imagem do produto
+    const [category, setCategory] = useState<string>('');
+    const [categories, setCategories] = useState<any[]>([]);
+    const [image, setImage] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
 
     // Buscar categorias
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/category', {
-                    headers: {
-                        'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODkzMjg5LCJpYXQiOjE3MzE4ODk2ODksImp0aSI6IjhhNjdhMDRlZjE0NzRjODE5YzYwYjUyNGZjMmZhODMzIiwidXNlcl9pZCI6MX0.jhGR6ruw7wRFHR0hn9grpTc0Ih4tP-McyA5rONdSWqc',
-                    },
-                });
-                setCategories(response.data);
+                const token = getCookie('access_token');
+                if (token !== null) {
+                    const categories = await fetchWithToken(token);
+                    if (categories) {
+                        setCategories(categories);
+                        setAccessToken(token);
+                    }
+                } else {
+                    console.log('No access token available');
+                    handleInvalidToken();
+                }
             } catch (error) {
                 console.error('Erro ao buscar categorias:', error);
                 Alert.alert('Erro', 'Erro ao buscar categorias');
             }
         };
-
+    
+        const fetchWithToken = async (token: string) => {
+            try {
+                const response = await axios.get('http://127.0.0.1:8000/category/', {
+                    headers: {
+                        Authorization: 'Bearer ' + token,
+                    },
+                    validateStatus: () => true,
+                });
+    
+                if (response.status === 200) {
+                    console.log('Categories received');
+                    return response.data;
+                } else if (response.status === 401) {
+                    console.log('Access token expired, refreshing...');
+                    const newAccessToken = await getNewAccessToken();
+                    if (newAccessToken) {
+                        setAccessToken(newAccessToken);
+                        return await fetchWithToken(newAccessToken);
+                    } else {
+                        console.log('Refresh token invalid, redirecting to login...');
+                        handleInvalidToken();
+                    }
+                } else {
+                    console.log(`Unexpected response status: ${response.status}`);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                return null;
+            }
+        };
+    
+        const handleInvalidToken = () => {
+            router.dismissAll();
+            router.replace('/(tabs)/');
+        };
+    
         fetchCategories();
     }, []);
+    
 
     // Manipular o upload da imagem
     const handleChooseImage = async () => {
@@ -81,7 +128,7 @@ const createProduct: React.FC = () => {
             const response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODkzMjg5LCJpYXQiOjE3MzE4ODk2ODksImp0aSI6IjhhNjdhMDRlZjE0NzRjODE5YzYwYjUyNGZjMmZhODMzIiwidXNlcl9pZCI6MX0.jhGR6ruw7wRFHR0hn9grpTc0Ih4tP-McyA5rONdSWqc',
+                    'Authorization': 'Bearer ' + accessToken,
                 },
             });
 

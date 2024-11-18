@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import ProductList from '@/components/ProductList';
 import SplashComponent from '../../components/SplashComponent';
 import { router } from 'expo-router';
 import axios from 'axios';
 import { getCookie, saveCookie } from '../services/CookieService';
+import { getNewAccessToken } from '../services/TokenService';
 
 SplashScreen.preventAutoHideAsync(); // Impede a auto-desaparecer da splash screen.
 
@@ -31,7 +31,7 @@ export default function HomeScreen() {
 
           if (tokenResponse.status === 200) {
             console.log('User authenticated!');
-            setIsLoggedIn(true); // Usuário autenticado
+            setIsLoggedIn(true);
             return;
           }
 
@@ -39,38 +39,19 @@ export default function HomeScreen() {
           if (tokenResponse.status === 401) {
             console.log('User not authenticated!');
 
-            const refreshToken = getCookie('refresh_token');
-            if (refreshToken !== null) {
-              try {
-                const refreshResponse = await axios.post(
-                  'http://127.0.0.1:8000/token/refresh',
-                  { refresh: refreshToken },
-                  {
-                    validateStatus: () => true,
-                  }
-                );
+            const newToken = await getNewAccessToken();
 
-                console.log('RefreshResponse:', refreshResponse);
-
-                if (refreshResponse.status === 200) {
-                  console.log('Access token refreshed successfully');
-                  const newToken = refreshResponse.data.access;
-                  saveCookie('access_token', newToken);
-                  setIsLoggedIn(true); // Usuário autenticado após refresh
-                } else if (refreshResponse.status === 401) {
-                  console.log('Invalid refresh token');
-                  setIsLoggedIn(false); // Token de refresh inválido
-                }
-              } catch (e) {
-                console.log(e);
-                setIsLoggedIn(false); // Erro na tentativa de refresh
-              }
-            } else {
-              setIsLoggedIn(false); // Nenhum token de refresh disponível
+            if (newToken !== null) {
+              setIsLoggedIn(true);
             }
+
+            else {
+              setIsLoggedIn(false);
+            }
+
           }
         } else {
-          setIsLoggedIn(false); // Não há token de acesso
+          setIsLoggedIn(false);
         }
       } catch (error) {
         console.log(error);
@@ -99,7 +80,10 @@ export default function HomeScreen() {
 
   // Se o usuário estiver logado, exibe o ProductList
   if (isLoggedIn) {
-    return <ProductList />;
+    return (
+      router.dismissAll(),
+      router.replace('/(tabs)/listProduct')
+    )
   }
 
   return (

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, Dimensions, Platform, ScrollView } from 'react-native';
-import { Link } from 'expo-router'; 
+import { Link, router } from 'expo-router';
 import axios from 'axios';
+import { getCookie } from '../services/CookieService';
+import { getNewAccessToken } from '../services/TokenService';
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = screenWidth > 600 ? 3 : 1;
 
 const listProduct: React.FC = () => {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -15,18 +17,55 @@ const listProduct: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/product/',
-          {
-            headers: {
-              'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxOTAyMjMwLCJpYXQiOjE3MzE4OTg2MzAsImp0aSI6ImMzY2Y2MGI5NjFhMDRhODQ5YjRhZDIyNDZmNjhlNWY3IiwidXNlcl9pZCI6MX0.dvsF0AHnugXYNi14PeFEefrgWq6VBKWL6BGwMNbnlTQ'
-            }
+        const accessToken = getCookie('access_token');
+        if (accessToken !== null) {
+          const products = await fetchWithToken(accessToken);
+          if (products) {
+            setProducts(products);
           }
-        );
-        console.log(response.data);
-        setProducts(response.data);
+        } else {
+          console.log('No access token available');
+          handleInvalidToken();
+        }
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
       }
+    };
+
+    const fetchWithToken = async (token: string) => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/product/', {
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
+          validateStatus: () => true,
+        });
+
+        if (response.status === 200) {
+          console.log('Products received');
+          return response.data;
+        } else if (response.status === 401) {
+          console.log('Access token expired, refreshing...');
+          const newAccessToken = await getNewAccessToken();
+          if (newAccessToken) {
+            return await fetchWithToken(newAccessToken); // Refaça a requisição com o novo token
+          } else {
+            console.log('Refresh token invalid, redirecting to login...');
+            handleInvalidToken();
+          }
+        } else {
+          console.log(`Unexpected response status: ${response.status}`);
+          return null;
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        return null;
+      }
+    };
+
+    const handleInvalidToken = () => {
+      router.dismissAll();
+      router.replace('/(tabs)/');
     };
 
     fetchProducts();
@@ -36,8 +75,9 @@ const listProduct: React.FC = () => {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }: { item: typeof products[0] }) => (
+  const renderItem = ({ item }: { item: Product }) => (
     <View
+
       style={[
         styles.productItem,
         hoveredItem === item.id && styles.productItemHovered,
@@ -45,9 +85,13 @@ const listProduct: React.FC = () => {
       onMouseEnter={() => setHoveredItem(item.id)}
       onMouseLeave={() => setHoveredItem(null)}
     >
-      <View style={styles.productImageWrapper}>
-        <Image source={{ uri: 'http://127.0.0.1:8000' + item.image }} style={styles.productImage} resizeMode="cover" />
-      </View>
+      <TouchableOpacity>
+        <Link href={`/(tabs)/viewProduct?id=${item.id}`}>
+          <View style={styles.productImageWrapper}>
+            <Image source={{ uri: 'http://127.0.0.1:8000' + item.image }} style={styles.productImage} resizeMode="cover" />
+          </View>
+        </Link>
+      </TouchableOpacity>
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>R${item.price.toFixed(2)}</Text>
@@ -60,6 +104,7 @@ const listProduct: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+
     </View>
   );
 

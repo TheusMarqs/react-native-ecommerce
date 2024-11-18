@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, Dimensions, Platform, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Dimensions,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
 import { getCookie } from '../services/CookieService';
@@ -8,7 +19,7 @@ import { getNewAccessToken } from '../services/TokenService';
 const screenWidth = Dimensions.get('window').width;
 const numColumns = screenWidth > 600 ? 3 : 1;
 
-const listProduct: React.FC = () => {
+const ListProduct: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -77,7 +88,6 @@ const listProduct: React.FC = () => {
 
   const renderItem = ({ item }: { item: Product }) => (
     <View
-
       style={[
         styles.productItem,
         hoveredItem === item.id && styles.productItemHovered,
@@ -88,7 +98,11 @@ const listProduct: React.FC = () => {
       <TouchableOpacity>
         <Link href={`/(tabs)/viewProduct?id=${item.id}`}>
           <View style={styles.productImageWrapper}>
-            <Image source={{ uri: 'http://127.0.0.1:8000' + item.image }} style={styles.productImage} resizeMode="cover" />
+            <Image
+              source={{ uri: 'http://127.0.0.1:8000' + item.image }}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
           </View>
         </Link>
       </TouchableOpacity>
@@ -96,29 +110,20 @@ const listProduct: React.FC = () => {
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>R${item.price.toFixed(2)}</Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.buyNowButton}
-            onPress={handleBuyNow}
-          >
+          <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
             <Text style={styles.buttonText}>Adicionar ao carrinho</Text>
           </TouchableOpacity>
         </View>
       </View>
-
     </View>
   );
 
   return (
+    <View style={styles.container}>
+      {/* Header com Botões */}
 
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Produtos</Text>
-      {/* Botão para ir para a página de login */}
-      <Link href="/(tabs)/login" style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>Acessar Login</Text>
-      </Link>
-      <Link href="/(tabs)/createProduct" style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>Cadastrar produto</Text>
-      </Link>
+
+      {/* Lista de Produtos */}
       <FlatList
         data={products}
         renderItem={renderItem}
@@ -127,6 +132,7 @@ const listProduct: React.FC = () => {
         numColumns={numColumns}
       />
 
+      {/* Modal de Compra */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -136,43 +142,83 @@ const listProduct: React.FC = () => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalText}>Produto adicionado ao carrinho!</Text>
-
             <TouchableOpacity style={styles.modalButton}>
-              <Link href="/(tabs)/cart"
+              <Link
+                href="/(tabs)/cart"
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>Ir ao Carrinho</Text>
               </Link>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}
+            >
               <Text style={styles.modalButtonText}>Continuar Comprando</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    flex: 1,
     backgroundColor: '#f4f4f4',
-    ...(Platform.OS === 'web' && {
-      paddingLeft: 80,
-      paddingRight: 80,
-    }),
   },
   header: {
-    textAlign: 'center',
+    backgroundColor: '#007b5e',
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+  },
+  headerTitle: {
+    color: '#fff',
     fontSize: 24,
-    color: '#333',
-    marginBottom: 10,
     fontWeight: 'bold',
   },
+  headerButtons: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    marginLeft: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+  },
+  actionButtonText: {
+    color: '#007b5e',
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: '#d9534f',
+  },
   productList: {
+    paddingHorizontal: 10,
     paddingBottom: 10,
   },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalButton: {
+    marginTop: 10,
+  },
+ 
+
   productItem: {
     flex: 1,
     margin: 5,
@@ -234,32 +280,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
   },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
+
   modalText: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  modalButton: {
-    backgroundColor: '#007b5e',
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
+  
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
@@ -278,6 +305,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cartButton: {
+    backgroundColor: '#007b5e',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  cartButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
 });
 
-export default listProduct;
+
+export default ListProduct;

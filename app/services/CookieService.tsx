@@ -39,7 +39,7 @@ export const saveUserData = async (userData: any) => {
     }
   };
 
-const saveCookie = (name: string, value: string) => {
+export const saveCookie = (name: string, value: string) => {
   console.log('fera')
   document.cookie = `${name}=${value}; path=/; Secure; SameSite=Strict`;
 };
@@ -48,7 +48,7 @@ const deleteCookie = (name: string) => {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 };
 
-const getCookie = (name: string) => {
+export const getCookie = (name: string) => {
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
     for (let i = 0; i < ca.length; i++) {

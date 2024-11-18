@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, Dimensions, Platform, ScrollView } from 'react-native';
-import { Link } from 'expo-router'; // Use o Link do expo-router
+import { Link } from 'expo-router'; 
 import axios from 'axios';
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = screenWidth > 600 ? 3 : 1;
 
-const ProductList: React.FC = () => {
+const listProduct: React.FC = () => {
   const [products, setProducts] = useState([]);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -235,4 +235,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductList;
+export default listProduct;

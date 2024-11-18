@@ -31,7 +31,7 @@ const login: React.FC = () => {
           const userData = response.data;
           await saveUserData(userData);
           router.dismissAll();
-          router.replace('/(tabs)/');
+          router.replace('/(tabs)/listProduct');
         } else if (response.status === 401) {
           setAlertType('error');
           setAlertMessage('Credenciais incorretas. Tente novamente.');

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import axios from 'axios';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import axios from 'axios';
 
-const CreateProduct: React.FC = () => {
+const createProduct: React.FC = () => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
@@ -15,14 +15,14 @@ const CreateProduct: React.FC = () => {
     const [image, setImage] = useState<any>(null); // Imagem do produto
     const [loading, setLoading] = useState(false);
 
-    // Função para buscar categorias ao carregar o componente
+    // Buscar categorias
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get('http://127.0.0.1:8000/category', {
                     headers: {
-                        'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODE3MjUxLCJpYXQiOjE3MzE4MTM2NTEsImp0aSI6ImJmODMzZmE0NWQ1MTRjZDFhODBlYWU2Yzk2MTVjYTljIiwidXNlcl9pZCI6MX0.NfkMGRi_Fv1Xig9euPbfUUoEWYDnXmsv30BziiyqCHk'
-                    }
+                        'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODkzMjg5LCJpYXQiOjE3MzE4ODk2ODksImp0aSI6IjhhNjdhMDRlZjE0NzRjODE5YzYwYjUyNGZjMmZhODMzIiwidXNlcl9pZCI6MX0.jhGR6ruw7wRFHR0hn9grpTc0Ih4tP-McyA5rONdSWqc',
+                    },
                 });
                 setCategories(response.data);
             } catch (error) {
@@ -34,23 +34,29 @@ const CreateProduct: React.FC = () => {
         fetchCategories();
     }, []);
 
-    // Função para validar e atualizar o campo de preço (aceita apenas números e ponto)
-    const handlePriceChange = (text: string) => {
-        const formattedText = text.replace(/[^0-9.]/g, '');
-        const parts = formattedText.split('.');
-        if (parts.length > 2) {
-            return;
+    // Manipular o upload da imagem
+    const handleChooseImage = async () => {
+        if (Platform.OS === 'web') {
+            // Lógica específica para web
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (event: any) => {
+                const file = event.target.files[0];
+                setImage({
+                    uri: URL.createObjectURL(file), // Cria um URL temporário
+                    type: file.type,
+                    name: file.name,
+                    file, // Guarda o arquivo real para enviar no backend
+                });
+            };
+            input.click();
+        } else {
+            // Adicionar lógica para Android/iOS (com react-native-image-picker)
+            Alert.alert('Atenção', 'Seleção de imagem não está configurada para mobile ainda.');
         }
-        setPrice(formattedText);
     };
 
-    // Função para validar e atualizar o campo de estoque (aceita apenas números inteiros)
-    const handleStockChange = (text: string) => {
-        const formattedText = text.replace(/[^0-9]/g, '');
-        setStock(formattedText);
-    };
-
-    // Função para criar um produto
     const handleCreateProduct = async () => {
         if (!name || !description || !price || !stock || !barCode || !qrCode || !category) {
             Alert.alert('Erro', 'Preencha todos os campos');
@@ -67,19 +73,15 @@ const CreateProduct: React.FC = () => {
         formData.append('qr_code', qrCode);
         formData.append('category', category);
 
-        if (image) {
-            formData.append('image', {
-                uri: image.uri,
-                type: image.type,
-                name: image.fileName,
-            });
+        if (image?.file) {
+            formData.append('image', image.file); // Usa o arquivo original para upload
         }
 
         try {
             const response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODE3MjUxLCJpYXQiOjE3MzE4MTM2NTEsImp0aSI6ImJmODMzZmE0NWQ1MTRjZDFhODBlYWU2Yzk2MTVjYTljIiwidXNlcl9pZCI6MX0.NfkMGRi_Fv1Xig9euPbfUUoEWYDnXmsv30BziiyqCHk',
+                    'Authorization': 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMxODkzMjg5LCJpYXQiOjE3MzE4ODk2ODksImp0aSI6IjhhNjdhMDRlZjE0NzRjODE5YzYwYjUyNGZjMmZhODMzIiwidXNlcl9pZCI6MX0.jhGR6ruw7wRFHR0hn9grpTc0Ih4tP-McyA5rONdSWqc',
                 },
             });
 
@@ -125,7 +127,7 @@ const CreateProduct: React.FC = () => {
                 placeholder="Preço"
                 value={price}
                 keyboardType="decimal-pad"
-                onChangeText={handlePriceChange}
+                onChangeText={(text) => setPrice(text.replace(/[^0-9.]/g, ''))}
                 placeholderTextColor="#aaa"
             />
             <TextInput
@@ -133,7 +135,7 @@ const CreateProduct: React.FC = () => {
                 placeholder="Estoque"
                 value={stock}
                 keyboardType="numeric"
-                onChangeText={handleStockChange}
+                onChangeText={(text) => setStock(text.replace(/[^0-9]/g, ''))}
                 placeholderTextColor="#aaa"
             />
             <TextInput
@@ -151,29 +153,29 @@ const CreateProduct: React.FC = () => {
                 placeholderTextColor="#aaa"
             />
 
-            {/* Seleção de Categoria com o Picker customizado */}
             <View style={styles.pickerContainer}>
                 <RNPickerSelect
                     onValueChange={(value) => setCategory(value)}
-                    items={categories.map((cat: any) => ({
-                        label: cat.name,  // Certifique-se de que cat.name seja uma string
-                        value: cat.id,    // Certifique-se de que cat.id seja uma string ou número
+                    items={categories.map((cat) => ({
+                        label: cat.name,
+                        value: cat.id,
                     }))}
                     placeholder={{
-                        label: "Selecione uma categoria",
-                        value: null,  // Certifique-se de que o valor seja nulo ou algo válido
+                        label: 'Selecione uma categoria',
+                        value: null,
                     }}
                     style={{
                         inputIOS: styles.pickerInput,
                         inputAndroid: styles.pickerInput,
-                        placeholder: styles.placeholder,
                     }}
                 />
             </View>
 
-            {/* Adicionando o campo de imagem */}
-            <TouchableOpacity onPress={() => {/* lógica para escolher imagem */ }} style={styles.button}>
-                <Text style={styles.buttonText}>Escolher Imagem</Text>
+            {/* Botão para selecionar a imagem */}
+            <TouchableOpacity onPress={handleChooseImage} style={styles.button}>
+                <Text style={styles.buttonText}>
+                    {image ? `Imagem Selecionada: ${image.name}` : 'Escolher Imagem'}
+                </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleCreateProduct} style={styles.button}>
@@ -184,59 +186,13 @@ const CreateProduct: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f4f4f4',
-    },
-    header: {
-        marginTop: 30,
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 40,
-        textAlign: 'center',
-    },
-    input: {
-        backgroundColor: '#fff',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2,
-    },
-    pickerContainer: {
-        marginBottom: 20,
-    },
-    pickerInput: {
-        fontSize: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        color: '#333',
-        backgroundColor: '#fff',
-    },
-    placeholder: {
-        color: '#aaa',
-    },
-    button: {
-        backgroundColor: '#007b5e',
-        paddingVertical: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-    }
+    container: { flex: 1, padding: 20, backgroundColor: '#f4f4f4' },
+    header: { marginTop: 30, fontSize: 24, fontWeight: 'bold', marginBottom: 40, textAlign: 'center' },
+    input: { backgroundColor: '#fff', padding: 15, borderRadius: 8, fontSize: 16, marginBottom: 20 },
+    pickerContainer: { marginBottom: 20 },
+    pickerInput: { fontSize: 16, paddingVertical: 12, paddingHorizontal: 10, borderRadius: 8 },
+    button: { backgroundColor: '#007b5e', padding: 15, borderRadius: 8, alignItems: 'center', marginVertical: 10 },
+    buttonText: { color: '#fff', fontSize: 18 },
 });
 
-export default CreateProduct;
+export default createProduct;

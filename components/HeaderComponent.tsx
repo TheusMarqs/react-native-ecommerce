@@ -11,8 +11,8 @@ const HeaderComponent: React.FC = () => {
 
   // Função para lidar com o logout
   const handleLogout = () => {
-    document.cookie =
-      'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    //document.cookie =
+      //'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     router.replace('/(tabs)/login');
   };
 

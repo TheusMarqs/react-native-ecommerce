@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
 import { getCookie } from '../services/CookieService';
 import { getNewAccessToken } from '../services/TokenService';
 import { router } from 'expo-router';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
-const createProduct: React.FC = () => {
+const createSupplier: React.FC = () => {
     const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState('');
-    const [barCode, setBarCode] = useState('');
-    const [qrCode, setQrCode] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [category, setCategory] = useState<string>('');
     const [categories, setCategories] = useState<any[]>([]);
-    const [image, setImage] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error'>('error');
+
+    const isValidEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
 
     // Buscar categorias
     useEffect(() => {
@@ -36,10 +41,10 @@ const createProduct: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Erro ao buscar categorias:', error);
-                Alert.alert('Erro', 'Erro ao buscar categorias');
+                displayAlert('Erro ao buscar categorias.', 'error');
             }
         };
-    
+
         const fetchWithToken = async (token: string) => {
             try {
                 const response = await axios.get('http://127.0.0.1:8000/category/', {
@@ -48,7 +53,7 @@ const createProduct: React.FC = () => {
                     },
                     validateStatus: () => true,
                 });
-    
+
                 if (response.status === 200) {
                     console.log('Categories received');
                     return response.data;
@@ -71,81 +76,55 @@ const createProduct: React.FC = () => {
                 return null;
             }
         };
-    
+
         const handleInvalidToken = () => {
             router.dismissAll();
             router.replace('/(tabs)/');
         };
-    
+
         fetchCategories();
     }, []);
-    
 
-    // Manipular o upload da imagem
-    const handleChooseImage = async () => {
-        if (Platform.OS === 'web') {
-            // Lógica específica para web
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (event: any) => {
-                const file = event.target.files[0];
-                setImage({
-                    uri: URL.createObjectURL(file), // Cria um URL temporário
-                    type: file.type,
-                    name: file.name,
-                    file, // Guarda o arquivo real para enviar no backend
-                });
-            };
-            input.click();
-        } else {
-            // Adicionar lógica para Android/iOS (com react-native-image-picker)
-            Alert.alert('Atenção', 'Seleção de imagem não está configurada para mobile ainda.');
-        }
+    const displayAlert = (message: string, type: 'success' | 'error') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
     };
 
-    const handleCreateProduct = async () => {
-        if (!name || !description || !price || !stock || !barCode || !qrCode || !category) {
-            Alert.alert('Erro', 'Preencha todos os campos');
+    const handleCreateSupplier = async () => {
+        if (!name || !email || !phone || !category) {
+            displayAlert('Por favor, preencha todos os campos.', 'error');
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            displayAlert('Por favor, insira um email válido.', 'error');
             return;
         }
 
         setLoading(true);
         const formData = new FormData();
         formData.append('name', name);
-        formData.append('description', description);
-        formData.append('price', price);
-        formData.append('stock', stock);
-        formData.append('bar_code', barCode);
-        formData.append('qr_code', qrCode);
+        formData.append('email', email);
+        formData.append('phone', phone);
         formData.append('category', category);
 
-        if (image?.file) {
-            formData.append('image', image.file); // Usa o arquivo original para upload
-        }
-
         try {
-            const response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
+            const response = await axios.post('http://127.0.0.1:8000/supplier/create', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
                     'Authorization': 'Bearer ' + accessToken,
                 },
             });
 
             console.log(response.data);
-
-            Alert.alert('Sucesso', 'Produto criado com sucesso');
+            displayAlert('Fornecedor salvo com sucesso!', 'success');
             setName('');
-            setDescription('');
-            setPrice('');
-            setStock('');
-            setBarCode('');
-            setQrCode('');
+            setEmail('');
+            setPhone('');
             setCategory('');
-            setImage(null);
         } catch (error) {
-            console.error('Erro ao criar produto:', error);
-            Alert.alert('Erro', 'Erro ao criar produto');
+            console.error('Erro ao salvar fornecedor:', error);
+            displayAlert('Erro ao salvar fornecedor.', 'error');
         } finally {
             setLoading(false);
         }
@@ -153,7 +132,7 @@ const createProduct: React.FC = () => {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.header}>Cadastrar Produto</Text>
+            <Text style={styles.header}>Cadastrar Fornecedor</Text>
 
             <TextInput
                 style={styles.input}
@@ -164,39 +143,18 @@ const createProduct: React.FC = () => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Descrição"
-                value={description}
-                onChangeText={setDescription}
+                placeholder="Email"
+                value={email}
+                keyboardType="email-address"
+                onChangeText={setEmail}
                 placeholderTextColor="#aaa"
             />
             <TextInput
                 style={styles.input}
-                placeholder="Preço"
-                value={price}
+                placeholder="Telefone"
+                value={phone}
                 keyboardType="decimal-pad"
-                onChangeText={(text) => setPrice(text.replace(/[^0-9.]/g, ''))}
-                placeholderTextColor="#aaa"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Estoque"
-                value={stock}
-                keyboardType="numeric"
-                onChangeText={(text) => setStock(text.replace(/[^0-9]/g, ''))}
-                placeholderTextColor="#aaa"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Código de Barras"
-                value={barCode}
-                onChangeText={setBarCode}
-                placeholderTextColor="#aaa"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="QR Code"
-                value={qrCode}
-                onChangeText={setQrCode}
+                onChangeText={(text) => setPhone(text.replace(/[^0-9.]/g, ''))}
                 placeholderTextColor="#aaa"
             />
 
@@ -218,16 +176,26 @@ const createProduct: React.FC = () => {
                 />
             </View>
 
-            {/* Botão para selecionar a imagem */}
-            <TouchableOpacity onPress={handleChooseImage} style={styles.button}>
-                <Text style={styles.buttonText}>
-                    {image ? `Imagem Selecionada: ${image.name}` : 'Escolher Imagem'}
-                </Text>
+            <TouchableOpacity onPress={handleCreateSupplier} style={styles.button}>
+                <Text style={styles.buttonText}>{loading ? 'Carregando...' : 'Salvar fornecedor'}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleCreateProduct} style={styles.button}>
-                <Text style={styles.buttonText}>{loading ? 'Carregando...' : 'Salvar Produto'}</Text>
-            </TouchableOpacity>
+            <AwesomeAlert
+                show={showAlert}
+                title={alertType === 'success' ? 'Sucesso!' : 'Erro!'}
+                message={alertMessage}
+                closeOnTouchOutside={true}
+                closeOnHardwareBackPress={false}
+                showCancelButton={false}
+                showConfirmButton={true}
+                confirmText="OK"
+                confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
+                onConfirmPressed={() => {
+                    setShowAlert(false)
+                    router.dismissAll();
+                    router.replace('/(tabs)/listProduct');
+                }}
+            />
         </ScrollView>
     );
 };
@@ -242,4 +210,4 @@ const styles = StyleSheet.create({
     buttonText: { color: '#fff', fontSize: 18 },
 });
 
-export default createProduct;
+export default createSupplier;

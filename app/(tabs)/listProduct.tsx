@@ -119,7 +119,7 @@ const ListProduct: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Header com Botões */}
 
 
@@ -159,7 +159,7 @@ const ListProduct: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   modalButton: {
     marginTop: 10,
   },
- 
+
 
   productItem: {
     flex: 1,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  
+
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  
+
 });
 
 

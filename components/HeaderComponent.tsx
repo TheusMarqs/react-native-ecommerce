@@ -18,7 +18,7 @@ const HeaderComponent: React.FC = () => {
 
   return (
     <View style={styles.header}>
-      <Text style={styles.logo}>MW Store</Text>
+      <Link href="/(tabs)/listProduct" style={styles.logo}>MW Store</Link>
       <View style={styles.navButtons}>
         {/* Exibe os botões apenas se não for a página de login ou cadastro */}
         {!isLoginOrRegisterPage && (

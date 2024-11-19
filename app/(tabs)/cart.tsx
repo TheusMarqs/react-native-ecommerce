@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons'; // Para adicionar ícones
 const initialCartItems = [
   { id: 1, name: 'Produto 1', price: 19.99, imageUrl: 'https://via.placeholder.com/150' },
   { id: 2, name: 'Produto 2', price: 29.99, imageUrl: 'https://via.placeholder.com/150' },
-  { id: 3, name: 'Produto 3', price: 39.99, imageUrl: 'https://via.placeholder.com/150' },
+  { id: 3, name: 'Produto 3', price: 39.99, imageUrl: 'https://via.placeholder.com/100' },
 ];
 
 const cart: React.FC = () => {

@@ -7,11 +7,9 @@ import { getNewAccessToken } from '../services/TokenService';
 import { router, useLocalSearchParams } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
-const createSupplier: React.FC = () => {
+const CreateSupplier: React.FC = () => {
     const params = useLocalSearchParams();
     const supplierId = params.id;
-
-    console.log('supplierId', supplierId);
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -24,18 +22,16 @@ const createSupplier: React.FC = () => {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error'>('error');
 
-
-
     const isValidEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
 
-    // Buscar categorias
     useEffect(() => {
+        const token = getCookie('access_token');
+
         const fetchCategories = async () => {
             try {
-                const token = getCookie('access_token');
                 if (token !== null) {
                     const categories = await fetchWithToken(token);
                     if (categories) {
@@ -49,6 +45,39 @@ const createSupplier: React.FC = () => {
             } catch (error) {
                 console.error('Erro ao buscar categorias:', error);
                 displayAlert('Erro ao buscar categorias.', 'error');
+            }
+        };
+
+        const fillForm = async () => {
+            if (supplierId) {
+                try {
+                    const response = await axios.get(`http://127.0.0.1:8000/supplier/${supplierId}`, {
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                        },
+                        validateStatus: () => true,
+                    });
+
+                    if (response.status === 200) {
+                        const data = response.data;
+                        setName(data.name || '');
+                        setEmail(data.email || '');
+                        setPhone(data.phone || '');
+                        setCategory(data.category || '');
+                    } else {
+                        console.error('Erro ao carregar fornecedor:', response.status);
+                        displayAlert('Erro ao carregar fornecedor.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar fornecedor:', error);
+                    displayAlert('Erro ao carregar fornecedor.', 'error');
+                }
+            } else {
+                // Limpa o formulário ao criar um novo fornecedor
+                setName('');
+                setEmail('');
+                setPhone('');
+                setCategory('');
             }
         };
 
@@ -90,7 +119,8 @@ const createSupplier: React.FC = () => {
         };
 
         fetchCategories();
-    }, []);
+        fillForm();
+    }, [supplierId]); // Atualiza sempre que o `supplierId` mudar
 
     const displayAlert = (message: string, type: 'success' | 'error') => {
         setAlertMessage(message);
@@ -98,7 +128,7 @@ const createSupplier: React.FC = () => {
         setShowAlert(true);
     };
 
-    const handleCreateSupplier = async () => {
+    const handleSupplier = async () => {
         if (!name || !email || !phone || !category) {
             displayAlert('Por favor, preencha todos os campos.', 'error');
             return;
@@ -117,11 +147,20 @@ const createSupplier: React.FC = () => {
         formData.append('category', category);
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/supplier/create', formData, {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                },
-            });
+            let response;
+            if (supplierId !== undefined) {
+                response = await axios.put(`http://127.0.0.1:8000/supplier/update/${supplierId}`, formData, {
+                    headers: {
+                        Authorization: 'Bearer ' + accessToken,
+                    },
+                });
+            } else {
+                response = await axios.post('http://127.0.0.1:8000/supplier/create', formData, {
+                    headers: {
+                        Authorization: 'Bearer ' + accessToken,
+                    },
+                });
+            }
 
             console.log(response.data);
             displayAlert('Fornecedor salvo com sucesso!', 'success');
@@ -167,23 +206,27 @@ const createSupplier: React.FC = () => {
 
             <View style={styles.pickerContainer}>
                 <RNPickerSelect
-                    onValueChange={(value) => setCategory(value)}
+                    value={category} // Assegure-se de que o valor do estado está sendo aplicado
+                    onValueChange={(value) => {
+                        setCategory(value); // Atualiza o estado com o valor selecionado
+                    }}
                     items={categories.map((cat) => ({
                         label: cat.name,
                         value: cat.id,
                     }))}
                     placeholder={{
                         label: 'Selecione uma categoria',
-                        value: null,
-                    }}
+                        value: '',
+                    }} // Valor inicial vazio
                     style={{
                         inputIOS: styles.pickerInput,
                         inputAndroid: styles.pickerInput,
                     }}
                 />
+
             </View>
 
-            <TouchableOpacity onPress={handleCreateSupplier} style={styles.button}>
+            <TouchableOpacity onPress={handleSupplier} style={styles.button}>
                 <Text style={styles.buttonText}>{loading ? 'Carregando...' : 'Salvar fornecedor'}</Text>
             </TouchableOpacity>
 
@@ -198,7 +241,7 @@ const createSupplier: React.FC = () => {
                 confirmText="OK"
                 confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
                 onConfirmPressed={() => {
-                    setShowAlert(false)
+                    setShowAlert(false);
                     router.dismissAll();
                     router.replace('/(tabs)/listProduct');
                 }}
@@ -211,37 +254,42 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#f4f4f4'
+        backgroundColor: '#f4f4f4',
     },
     header: {
         marginTop: 30,
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 40,
-        textAlign: 'center'
+        textAlign: 'center',
     },
     input: {
         backgroundColor: '#fff',
         padding: 15,
         borderRadius: 8,
         fontSize: 16,
-        marginBottom: 20
+        marginBottom: 20,
     },
     pickerContainer: {
-        marginBottom: 20
+        marginBottom: 20,
     },
     pickerInput: {
         fontSize: 16,
         paddingVertical: 12,
         paddingHorizontal: 10,
-        borderRadius: 8
+        borderRadius: 8,
     },
     button: {
         backgroundColor: '#007b5e',
-        padding: 15, borderRadius: 8,
+        padding: 15,
+        borderRadius: 8,
         alignItems: 'center',
-        marginVertical: 10
+        marginVertical: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 18,
     },
 });
 
-export default createSupplier;
+export default CreateSupplier;

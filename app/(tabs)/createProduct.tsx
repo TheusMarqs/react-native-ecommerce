@@ -4,9 +4,13 @@ import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
 import { getCookie } from '../services/CookieService';
 import { getNewAccessToken } from '../services/TokenService';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 const createProduct: React.FC = () => {
+    const params = useLocalSearchParams();
+    const productId = params.id;
+
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
@@ -18,12 +22,15 @@ const createProduct: React.FC = () => {
     const [image, setImage] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error'>('error');
 
-    // Buscar categorias
     useEffect(() => {
+        const token = getCookie('access_token');
+
         const fetchCategories = async () => {
             try {
-                const token = getCookie('access_token');
                 if (token !== null) {
                     const categories = await fetchWithToken(token);
                     if (categories) {
@@ -36,10 +43,49 @@ const createProduct: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Erro ao buscar categorias:', error);
-                Alert.alert('Erro', 'Erro ao buscar categorias');
+                displayAlert('Erro ao buscar categorias', 'error');
             }
         };
-    
+
+        const fillForm = async () => {
+            if (productId) {
+                try {
+                    const response = await axios.get(`http://127.0.0.1:8000/product/${productId}`, {
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                        },
+                        validateStatus: () => true,
+                    });
+
+                    if (response.status === 200) {
+                        const data = response.data;
+                        setName(data.name || '');
+                        setDescription(data.description || '');
+                        setPrice(data.price || '');
+                        setStock(data.stock || '');
+                        setQrCode(data.qr_code || '');
+                        setBarCode(data.bar_code || '');
+                        setCategory(data.category || '');
+                    } else {
+                        console.error('Erro ao carregar produto:', response.status);
+                        displayAlert('Erro ao carregar produto.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar produto:', error);
+                    displayAlert('Erro ao carregar produto.', 'error');
+                }
+            } else {
+                // Limpa o formulário ao criar um novo produto
+                setName('');
+                setDescription('');
+                setPrice('');
+                setStock('');
+                setQrCode('');
+                setBarCode('');
+                setCategory('');
+            }
+        };
+
         const fetchWithToken = async (token: string) => {
             try {
                 const response = await axios.get('http://127.0.0.1:8000/category/', {
@@ -48,7 +94,7 @@ const createProduct: React.FC = () => {
                     },
                     validateStatus: () => true,
                 });
-    
+
                 if (response.status === 200) {
                     console.log('Categories received');
                     return response.data;
@@ -71,15 +117,22 @@ const createProduct: React.FC = () => {
                 return null;
             }
         };
-    
+
         const handleInvalidToken = () => {
             router.dismissAll();
             router.replace('/(tabs)/');
         };
-    
+
         fetchCategories();
-    }, []);
-    
+        fillForm();
+    }, [productId]);
+
+    const displayAlert = (message: string, type: 'success' | 'error') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+    };
+
 
     // Manipular o upload da imagem
     const handleChooseImage = async () => {
@@ -100,13 +153,14 @@ const createProduct: React.FC = () => {
             input.click();
         } else {
             // Adicionar lógica para Android/iOS (com react-native-image-picker)
+            
             Alert.alert('Atenção', 'Seleção de imagem não está configurada para mobile ainda.');
         }
     };
 
-    const handleCreateProduct = async () => {
+    const handleProduct = async () => {
         if (!name || !description || !price || !stock || !barCode || !qrCode || !category) {
-            Alert.alert('Erro', 'Preencha todos os campos');
+            displayAlert('Preencha todos os campos', 'error');
             return;
         }
 
@@ -121,20 +175,31 @@ const createProduct: React.FC = () => {
         formData.append('category', category);
 
         if (image?.file) {
-            formData.append('image', image.file); // Usa o arquivo original para upload
+            formData.append('image', image.file);
         }
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': 'Bearer ' + accessToken,
-                },
-            });
+
+            let response;
+            if (productId !== undefined) {
+                response = await axios.put(`http://127.0.0.1:8000/product/update/${productId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                });
+            } else {
+                response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                });
+            }
 
             console.log(response.data);
 
-            Alert.alert('Sucesso', 'Produto criado com sucesso');
+            displayAlert('Produto criado com sucesso!', 'success')
             setName('');
             setDescription('');
             setPrice('');
@@ -145,7 +210,7 @@ const createProduct: React.FC = () => {
             setImage(null);
         } catch (error) {
             console.error('Erro ao criar produto:', error);
-            Alert.alert('Erro', 'Erro ao criar produto');
+            displayAlert('Erro ao criar produto.', 'error')
         } finally {
             setLoading(false);
         }
@@ -201,16 +266,19 @@ const createProduct: React.FC = () => {
             />
 
             <View style={styles.pickerContainer}>
-                <RNPickerSelect
-                    onValueChange={(value) => setCategory(value)}
+            <RNPickerSelect
+                    value={category} // Assegure-se de que o valor do estado está sendo aplicado
+                    onValueChange={(value) => {
+                        setCategory(value); // Atualiza o estado com o valor selecionado
+                    }}
                     items={categories.map((cat) => ({
                         label: cat.name,
                         value: cat.id,
                     }))}
                     placeholder={{
                         label: 'Selecione uma categoria',
-                        value: null,
-                    }}
+                        value: '',
+                    }} // Valor inicial vazio
                     style={{
                         inputIOS: styles.pickerInput,
                         inputAndroid: styles.pickerInput,
@@ -225,9 +293,26 @@ const createProduct: React.FC = () => {
                 </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleCreateProduct} style={styles.button}>
+            <TouchableOpacity onPress={handleProduct} style={styles.button}>
                 <Text style={styles.buttonText}>{loading ? 'Carregando...' : 'Salvar Produto'}</Text>
             </TouchableOpacity>
+
+            <AwesomeAlert
+                show={showAlert}
+                title={alertType === 'success' ? 'Sucesso!' : 'Erro!'}
+                message={alertMessage}
+                closeOnTouchOutside={true}
+                closeOnHardwareBackPress={false}
+                showCancelButton={false}
+                showConfirmButton={true}
+                confirmText="OK"
+                confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
+                onConfirmPressed={() => {
+                    setShowAlert(false);
+                    router.dismissAll();
+                    router.replace('/(tabs)/listProduct');
+                }}
+            />
         </ScrollView>
     );
 };

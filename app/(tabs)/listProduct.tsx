@@ -30,6 +30,7 @@ const ListProduct: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // Função para buscar os produtos da API
   const fetchProducts = async () => {
@@ -38,6 +39,7 @@ const ListProduct: React.FC = () => {
       if (accessToken !== null) {
         const products = await fetchWithToken(accessToken);
         if (products) {
+          setAccessToken(accessToken);
           setProducts(products);
         }
       } else {
@@ -65,6 +67,7 @@ const ListProduct: React.FC = () => {
         console.log('Access token expired, refreshing...');
         const newAccessToken = await getNewAccessToken();
         if (newAccessToken) {
+          setAccessToken(newAccessToken);
           return await fetchWithToken(newAccessToken); // Refaça a requisição com o novo token
         } else {
           console.log('Refresh token invalid, redirecting to login...');
@@ -150,13 +153,18 @@ const ListProduct: React.FC = () => {
     setShowAlert(true);
     setConfirmAction(() => async () => {
       try {
-        await axios.delete(`http://127.0.0.1:8000/product/delete/${id}`);
-        setAlertMessage('Fornecedor excluído com sucesso.');
+        await axios.delete(`http://127.0.0.1:8000/product/delete/${id}`, {
+          headers: {
+            'Authorization': 'Bearer ' + accessToken
+          },
+          validateStatus: () => true,
+        });
+        setAlertMessage('Produto excluído com sucesso.');
         setAlertType('success');
         setShowAlert(true);
         fetchProducts();
       } catch (error) {
-        setAlertMessage('Não foi possível excluir o fornecedor.');
+        setAlertMessage('Não foi possível excluir o produto.');
         setAlertType('error');
         setShowAlert(true);
         console.error(error);

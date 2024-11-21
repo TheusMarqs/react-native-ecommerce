@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import axios from 'axios';
 import { Link, router } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
+import { getCookie } from '../services/CookieService';
+import { getNewAccessToken } from '../services/TokenService';
 
 const ListSupplier: React.FC = () => {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -14,18 +16,56 @@ const ListSupplier: React.FC = () => {
 
     // Fetch suppliers
     const fetchSuppliers = async () => {
-        setLoading(true);
         try {
-            const response = await axios.get('http://127.0.0.1:8000/supplier/');
-            setSuppliers(response.data);
+            const accessToken = getCookie('access_token');
+            if (accessToken !== null) {
+                const suppliers = await fetchWithToken(accessToken);
+                if (suppliers) {
+                    setSuppliers(suppliers);
+                }
+            } else {
+                console.log('No access token available');
+                handleInvalidToken();
+            }
         } catch (error) {
-            setAlertMessage('Não foi possível carregar os fornecedores.');
-            setAlertType('error');
-            setShowAlert(true);
-            console.error(error);
-        } finally {
-            setLoading(false);
+            console.error('Erro ao buscar produtos:', error);
         }
+    };
+
+    const fetchWithToken = async (token: string) => {
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/supplier/', {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                validateStatus: () => true,
+            });
+
+            if (response.status === 200) {
+                console.log('Suppliers received');
+                return response.data;
+            } else if (response.status === 401) {
+                console.log('Access token expired, refreshing...');
+                const newAccessToken = await getNewAccessToken();
+                if (newAccessToken) {
+                    return await fetchWithToken(newAccessToken);
+                } else {
+                    console.log('Refresh token invalid, redirecting to login...');
+                    handleInvalidToken();
+                }
+            } else {
+                console.log(`Unexpected response status: ${response.status}`);
+                return null;
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            return null;
+        }
+    };
+
+    const handleInvalidToken = () => {
+        router.dismissAll();
+        router.replace('/(tabs)/');
     };
 
     // Delete supplier
@@ -35,7 +75,15 @@ const ListSupplier: React.FC = () => {
         setShowAlert(true);
         setConfirmAction(() => async () => {
             try {
-                await axios.delete(`http://127.0.0.1:8000/supplier/delete/${id}`);
+                const accessToken = getCookie('access_token');
+                await axios.delete(`http://127.0.0.1:8000/supplier/delete/${id}`,
+                    {
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                        },
+                        validateStatus: () => true,
+                    }
+                );
                 setAlertMessage('Fornecedor excluído com sucesso.');
                 setAlertType('success');
                 setShowAlert(true);
@@ -58,7 +106,7 @@ const ListSupplier: React.FC = () => {
     useEffect(() => {
         fetchSuppliers();
     }, []);
- 
+
     const renderSupplier = ({ item }: { item: Supplier }) => (
         <View style={styles.supplierCard}>
             <Text style={styles.supplierName}>{item.name}</Text>
@@ -87,7 +135,7 @@ const ListSupplier: React.FC = () => {
         <ScrollView style={styles.container}>
             <Text style={styles.header}>Fornecedores</Text>
             <Link style={styles.newSupplierBtn} href="/(tabs)/createSupplier">
-              <Text style={styles.buttonText}>Novo fornecedor</Text>
+                <Text style={styles.buttonText}>Novo fornecedor</Text>
             </Link>
             {loading ? (
                 <ActivityIndicator size="large" color="#007b5e" />

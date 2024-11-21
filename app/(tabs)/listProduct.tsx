@@ -15,6 +15,9 @@ import { Link, router } from 'expo-router';
 import axios from 'axios';
 import { getCookie } from '../services/CookieService';
 import { getNewAccessToken } from '../services/TokenService';
+import AwesomeAlert from 'react-native-awesome-alerts';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = screenWidth > 600 ? 3 : 1;
@@ -23,64 +26,69 @@ const ListProduct: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
 
   // Função para buscar os produtos da API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const accessToken = getCookie('access_token');
-        if (accessToken !== null) {
-          const products = await fetchWithToken(accessToken);
-          if (products) {
-            setProducts(products);
-          }
+  const fetchProducts = async () => {
+    try {
+      const accessToken = getCookie('access_token');
+      if (accessToken !== null) {
+        const products = await fetchWithToken(accessToken);
+        if (products) {
+          setProducts(products);
+        }
+      } else {
+        console.log('No access token available');
+        handleInvalidToken();
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    }
+  };
+
+  const fetchWithToken = async (token: string) => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/product/', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+        },
+        validateStatus: () => true,
+      });
+
+      if (response.status === 200) {
+        console.log('Products received');
+        return response.data;
+      } else if (response.status === 401) {
+        console.log('Access token expired, refreshing...');
+        const newAccessToken = await getNewAccessToken();
+        if (newAccessToken) {
+          return await fetchWithToken(newAccessToken); // Refaça a requisição com o novo token
         } else {
-          console.log('No access token available');
+          console.log('Refresh token invalid, redirecting to login...');
           handleInvalidToken();
         }
-      } catch (error) {
-        console.error('Erro ao buscar produtos:', error);
-      }
-    };
-
-    const fetchWithToken = async (token: string) => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/product/', {
-          headers: {
-            'Authorization': 'Bearer ' + token,
-          },
-          validateStatus: () => true,
-        });
-
-        if (response.status === 200) {
-          console.log('Products received');
-          return response.data;
-        } else if (response.status === 401) {
-          console.log('Access token expired, refreshing...');
-          const newAccessToken = await getNewAccessToken();
-          if (newAccessToken) {
-            return await fetchWithToken(newAccessToken); // Refaça a requisição com o novo token
-          } else {
-            console.log('Refresh token invalid, redirecting to login...');
-            handleInvalidToken();
-          }
-        } else {
-          console.log(`Unexpected response status: ${response.status}`);
-          return null;
-        }
-      } catch (error) {
-        console.error('Erro na requisição:', error);
+      } else {
+        console.log(`Unexpected response status: ${response.status}`);
         return null;
       }
-    };
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      return null;
+    }
+  };
 
-    const handleInvalidToken = () => {
-      router.dismissAll();
-      router.replace('/(tabs)/');
-    };
+  const handleInvalidToken = () => {
+    router.dismissAll();
+    router.replace('/(tabs)/');
+  };
 
+  useEffect(() => {
     fetchProducts();
   }, []);
+
 
   const handleBuyNow = () => {
     setModalVisible(true);
@@ -114,14 +122,54 @@ const ListProduct: React.FC = () => {
             <Text style={styles.buttonText}>Adicionar ao carrinho</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.actionIcons}>
+          <TouchableOpacity style={styles.mr} onPress={() => editProduct(item.id)}>
+            <Text>
+              <Icon name="edit" size={24} color="#007b5e" />
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => confirmDeleteProduct(item.id)}>
+            <Text>
+              <Icon name="trash" size={23} color="#FF3B30" />
+            </Text>
+          </TouchableOpacity>
+        </View>
+
       </View>
     </View>
   );
+  const editProduct = (id: number) => {
+    router.dismissAll();
+    router.replace(`/createProduct?id=${id}`);
+  };
+
+  const confirmDeleteProduct = (id: number) => {
+    setAlertMessage('Tem certeza que deseja excluir este produto?');
+    setAlertType('error');
+    setShowAlert(true);
+    setConfirmAction(() => async () => {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/product/delete/${id}`);
+        setAlertMessage('Fornecedor excluído com sucesso.');
+        setAlertType('success');
+        setShowAlert(true);
+        fetchProducts();
+      } catch (error) {
+        setAlertMessage('Não foi possível excluir o fornecedor.');
+        setAlertType('error');
+        setShowAlert(true);
+        console.error(error);
+      }
+    });
+  };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header com Botões */}
-
+      <Text style={styles.headerTitle}>Produtos</Text>
+      <Link style={styles.newProductBtn} href="/(tabs)/createProduct">
+        <Text style={styles.txtNewProduct}>Novo produto</Text>
+      </Link>
 
       {/* Lista de Produtos */}
       <FlatList
@@ -159,6 +207,27 @@ const ListProduct: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <AwesomeAlert
+        show={showAlert}
+        title={alertType === 'success' ? 'Sucesso!' : alertType === 'error' ? 'Erro!' : 'Confirmação'}
+        message={alertMessage}
+        closeOnTouchOutside={alertType !== 'error'}
+        closeOnHardwareBackPress={false}
+        showCancelButton={alertType === 'error'}
+        cancelText="Cancelar"
+        cancelButtonColor="#aaa"
+        showConfirmButton={true}
+        confirmText={alertType === 'error' ? 'Excluir' : 'OK'}
+        confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
+        onCancelPressed={() => setShowAlert(false)}
+        onConfirmPressed={() => {
+          if (confirmAction) {
+            confirmAction();
+            setConfirmAction(null);
+          }
+          setShowAlert(false);
+        }}
+      />
     </ScrollView>
   );
 };
@@ -176,9 +245,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   headerTitle: {
-    color: '#fff',
+    color: 'black',
+    textAlign: 'center',
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 30,
+    marginTop: 30,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -215,9 +287,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalButton: {
+    backgroundColor: '#007b5e',
+    borderRadius: 5,
+    padding: 10,
     marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
   },
-
 
   productItem: {
     flex: 1,
@@ -225,9 +301,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     overflow: 'hidden',
+    height: '100%',
     elevation: 3,
     ...(Platform.OS === 'web' && {
-      margin: 10,
+      margin: 13,
     }),
   },
   productItemHovered: {
@@ -281,6 +358,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  txtNewProduct: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
   modalText: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -329,6 +413,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+
+  newProductBtn: {
+    padding: 11,
+    backgroundColor: '#007b5e',
+    borderRadius: 5,
+    alignItems: 'center',
+    width: 130,
+    marginBottom: 10,
+    marginLeft: 30
+  },
+
+  actionIcons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  mr: {
+    marginRight: 10
+  }
 
 });
 

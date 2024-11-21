@@ -12,7 +12,7 @@ const HeaderComponent: React.FC = () => {
   // Função para lidar com o logout
   const handleLogout = () => {
     //document.cookie =
-      //'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    //'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     router.replace('/(tabs)/login');
   };
 
@@ -23,6 +23,9 @@ const HeaderComponent: React.FC = () => {
         {/* Exibe os botões apenas se não for a página de login ou cadastro */}
         {!isLoginOrRegisterPage && (
           <>
+            <Link href="/(tabs)/listSupplier" style={styles.navButton}>
+              <Text style={styles.navButtonText}>Fornecedores</Text>
+            </Link>
             <Link href="/(tabs)/cart" style={styles.navButton}>
               <Text style={styles.navButtonText}>Carrinho</Text>
             </Link>

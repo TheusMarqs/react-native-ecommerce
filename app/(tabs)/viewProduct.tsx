@@ -5,18 +5,6 @@ import { getCookie } from '../services/CookieService';
 import axios from 'axios';
 import { getNewAccessToken } from '../services/TokenService';
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  bar_code: number;
-  qr_code: number;
-  category: number;
-  image: string;
-}
-
 const ViewProduct: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState<number>(1); // Default quantity

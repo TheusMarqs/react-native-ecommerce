@@ -4,10 +4,15 @@ import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
 import { getCookie } from '../services/CookieService';
 import { getNewAccessToken } from '../services/TokenService';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 const createSupplier: React.FC = () => {
+    const params = useLocalSearchParams();
+    const supplierId = params.id;
+
+    console.log('supplierId', supplierId);
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
@@ -18,6 +23,8 @@ const createSupplier: React.FC = () => {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error'>('error');
+
+
 
     const isValidEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -201,13 +208,40 @@ const createSupplier: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#f4f4f4' },
-    header: { marginTop: 30, fontSize: 24, fontWeight: 'bold', marginBottom: 40, textAlign: 'center' },
-    input: { backgroundColor: '#fff', padding: 15, borderRadius: 8, fontSize: 16, marginBottom: 20 },
-    pickerContainer: { marginBottom: 20 },
-    pickerInput: { fontSize: 16, paddingVertical: 12, paddingHorizontal: 10, borderRadius: 8 },
-    button: { backgroundColor: '#007b5e', padding: 15, borderRadius: 8, alignItems: 'center', marginVertical: 10 },
-    buttonText: { color: '#fff', fontSize: 18 },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#f4f4f4'
+    },
+    header: {
+        marginTop: 30,
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 40,
+        textAlign: 'center'
+    },
+    input: {
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 8,
+        fontSize: 16,
+        marginBottom: 20
+    },
+    pickerContainer: {
+        marginBottom: 20
+    },
+    pickerInput: {
+        fontSize: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderRadius: 8
+    },
+    button: {
+        backgroundColor: '#007b5e',
+        padding: 15, borderRadius: 8,
+        alignItems: 'center',
+        marginVertical: 10
+    },
 });
 
 export default createSupplier;

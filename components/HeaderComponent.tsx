@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     letterSpacing: 1.5,
-    flex: 1,
   },
   navButtons: {
     flexDirection: 'row',

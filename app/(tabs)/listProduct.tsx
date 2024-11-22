@@ -93,9 +93,28 @@ const ListProduct: React.FC = () => {
   }, []);
 
 
-  const handleBuyNow = () => {
+  const handleAddtoCart = async (productId: number) => {
+    try {
+      var userId = await getCookie('id');
+      console.log("userid", userId, "token", accessToken)
+      const response = await axios.post('http://127.0.0.1:8000/cart/item/create',
+        {
+          "user_id": userId,
+          "product_id": productId,
+          "quantity": 1
+        },
+        {
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+          },
+        })
+
+        console.log(response);
+    } catch (error) {
+      console.error('Erro ao adicionar ao carrinho:', error);
+    };
     setModalVisible(true);
-  };
+  }
 
   const renderItem = ({ item }: { item: Product }) => (
     <View
@@ -121,7 +140,7 @@ const ListProduct: React.FC = () => {
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>R${item.price.toFixed(2)}</Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+          <TouchableOpacity style={styles.buyNowButton} onPress={() => handleAddtoCart(item.id)}>
             <Text style={styles.buttonText}>Adicionar ao carrinho</Text>
           </TouchableOpacity>
         </View>

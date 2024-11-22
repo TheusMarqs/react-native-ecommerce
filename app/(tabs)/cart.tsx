@@ -1,40 +1,131 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Para adicionar ícones
+import axios from 'axios';
+import { getCookie } from '../services/CookieService';
+import AwesomeAlert from 'react-native-awesome-alerts'; // Importando o AwesomeAlert
+import { router } from 'expo-router';
 
-// Dados simulados para produtos no carrinho
-const initialCartItems = [
-  { id: 1, name: 'Produto 1', price: 19.99, imageUrl: 'https://via.placeholder.com/150' },
-  { id: 2, name: 'Produto 2', price: 29.99, imageUrl: 'https://via.placeholder.com/150' },
-  { id: 3, name: 'Produto 3', price: 39.99, imageUrl: 'https://via.placeholder.com/100' },
-];
+// Definindo a interface para os itens do carrinho
+interface CartItem {
+  product: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    bar_code: string;
+    qr_code: string;
+    category: number;
+    image: string;
+  };
+  quantity: number;
+}
 
-const cart: React.FC = () => {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+// Definindo a interface para o carrinho
+interface Cart {
+  user: number;
+  cart_items: CartItem[];
+  total_value: string;
+}
+
+const CartScreen: React.FC = () => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [totalValue, setTotalValue] = useState<string>('0.00');
+  const [showAlert, setShowAlert] = useState(false); // Estado para controlar a exibição do alerta
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  // Função para buscar os itens do carrinho da API
+  const fetchCartItems = async () => {
+    try {
+      var token = await getCookie('access_token')
+      var userId = await getCookie('id');
+      const response = await axios.get('http://127.0.0.1:8000/cart/?user_id=' + userId, {
+        headers: {
+          Authorization: 'Bearer ' + token
+        },
+        validateStatus: () => true,
+      });
+      const data: Cart = response.data;
+      setCartItems(data.cart_items);
+      setTotalValue(data.total_value);
+      setAccessToken(token);
+    } catch (error) {
+      console.error('Erro ao carregar os itens do carrinho:', error);
+    }
+  };
 
   // Função para remover um item do carrinho
-  const removeItemFromCart = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+  const removeItemFromCart = async (productId: number) => {
+    var userId = await getCookie('id')
+    try {
+      var response = await axios.delete('http://127.0.0.1:8000/cart/item/delete',
+        {
+          data: {
+            user_id: userId,
+            product_id: productId,
+          },
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+          },
+        });
+
+      if (response.status === 200) {
+        fetchCartItems();
+      }
+      console.log(response)
+    }
+    catch (error) {
+      console.log(error);
+    }
   };
 
   // Função para exibir alerta ao finalizar a compra
   const handleCheckout = () => {
-    Alert.alert('Compra finalizada!', 'Obrigado por sua compra.');
-    setCartItems([]); // Limpa o carrinho após a compra
+    setShowAlert(true); // Exibe o alerta de sucesso ao finalizar a compra
   };
 
-  const renderItem = ({ item }: { item: typeof cartItems[0] }) => (
+  const cleanCart = async () => {
+    var userId = await getCookie('id')
+
+    try {
+      var response = await axios.delete('http://127.0.0.1:8000/cart/delete?user_id=' + userId,
+        {
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+          },
+        });
+
+      if (response.status === 200) {
+        router.dismissAll()
+        router.replace('/(tabs)/listProduct')
+      }
+      console.log(response)
+    }
+    catch (error) {
+      console.log(error);
+    }
+  }
+
+  // Função para renderizar cada item do carrinho
+  const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
-      <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+      <Image source={{ uri: item.product.image }} style={styles.itemImage} />
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemPrice}>R$ {item.price.toFixed(2)}</Text>
+        <Text style={styles.itemName}>{item.product.name}</Text>
+        <Text style={styles.itemPrice}>R$ {(item.product.price * item.quantity).toFixed(2)}</Text>
+        <Text style={styles.itemQuantity}>Quantidade: {item.quantity}</Text>
       </View>
-      <TouchableOpacity style={styles.removeButton} onPress={() => removeItemFromCart(item.id)}>
+      <TouchableOpacity style={styles.removeButton} onPress={() => removeItemFromCart(item.product.id)}>
         <Ionicons name="trash" size={20} color="#fff" />
       </TouchableOpacity>
     </View>
   );
+
+  // Carregar os itens do carrinho assim que o componente for montado
+  useEffect(() => {
+    fetchCartItems();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -44,11 +135,11 @@ const cart: React.FC = () => {
           <FlatList
             data={cartItems}
             renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.product.id.toString()}
             contentContainerStyle={styles.cartList}
           />
           <View style={styles.summary}>
-            <Text style={styles.totalText}>Total: R$ {cartItems.reduce((total, item) => total + item.price, 0).toFixed(2)}</Text>
+            <Text style={styles.totalText}>Total: R$ {totalValue}</Text>
             <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
               <Text style={styles.checkoutButtonText}>Finalizar Compra</Text>
             </TouchableOpacity>
@@ -57,6 +148,37 @@ const cart: React.FC = () => {
       ) : (
         <Text style={styles.emptyCartText}>Seu carrinho está vazio.</Text>
       )}
+
+      {/* Alerta para erro ao carregar os itens */}
+      <AwesomeAlert
+        show={showAlert}
+        showProgress={false}
+        title="Erro"
+        closeOnTouchOutside={true}
+        closeOnHardwareBackPress={false}
+        showConfirmButton={true}
+        confirmText="Ok"
+        confirmButtonColor="#DD6B55"
+        onConfirmPressed={() => setShowAlert(false)}
+      />
+
+      {/* Alerta para finalizar a compra com sucesso */}
+      <AwesomeAlert
+        show={showAlert}
+        showProgress={false}
+        title="Compra Finalizada!"
+        message="Obrigado por sua compra."
+        closeOnTouchOutside={true}
+        closeOnHardwareBackPress={false}
+        showConfirmButton={true}
+        confirmText="Ok"
+        confirmButtonColor="#007b5e"
+        onConfirmPressed={() => {
+          cleanCart();
+          setShowAlert(false);
+          // setCartItems([]); // Limpa o carrinho após a compra
+        }}
+      />
     </View>
   );
 };
@@ -110,6 +232,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 5,
   },
+  itemQuantity: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 5,
+  },
   removeButton: {
     padding: 10,
     backgroundColor: '#ff5252',
@@ -156,4 +283,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default cart;
+export default CartScreen;

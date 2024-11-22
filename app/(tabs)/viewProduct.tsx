@@ -1,24 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
+import { useLocalSearchParams, router, Link } from 'expo-router';
 import { getCookie } from '../services/CookieService';
 import axios from 'axios';
 import { getNewAccessToken } from '../services/TokenService';
 
 const ViewProduct: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState<number>(1); // Default quantity
+  const [quantity, setQuantity] = useState<number>(1);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const params = useLocalSearchParams();
-  const productId = params.id;
+  const productId = Number(params.id);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const accessToken = getCookie('access_token');
-        if (accessToken !== null) {
-          const product = await fetchWithToken(accessToken);
+        const token = getCookie('access_token');
+        if (token !== null) {
+          const product = await fetchWithToken(token);
           if (product) {
             setProduct(product);
+            setAccessToken(token)
           }
         } else {
           console.log('No access token available');
@@ -44,6 +47,7 @@ const ViewProduct: React.FC = () => {
           console.log('Access token expired, refreshing...');
           const newAccessToken = await getNewAccessToken();
           if (newAccessToken) {
+            setAccessToken(newAccessToken);
             return await fetchWithToken(newAccessToken);
           } else {
             console.log('Refresh token invalid, redirecting to login...');
@@ -67,11 +71,6 @@ const ViewProduct: React.FC = () => {
     fetchProduct();
   }, [productId]);
 
-  const handleAddToCart = () => {
-    // Function to add the product to the cart
-    console.log(`Added ${quantity} item(s) to the cart`);
-  };
-
   const handleBuyNow = () => {
     // Function to handle immediate purchase
     console.log(`Bought ${quantity} item(s)`);
@@ -91,6 +90,32 @@ const ViewProduct: React.FC = () => {
 
   if (!product) {
     return <Text>Loading...</Text>;
+  }
+
+  const handleAddtoCart = async (productId: number) => {
+    try {
+      var userId = await getCookie('id');
+      console.log("userid", userId, "token", accessToken)
+      const response = await axios.post('http://127.0.0.1:8000/cart/item/create',
+        {
+          "user_id": userId,
+          "product_id": productId,
+          "quantity": quantity
+        },
+        {
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+          },
+        })
+
+        if (response.status === 201) {
+          setModalVisible(true);
+        }
+
+      console.log(response);
+    } catch (error) {
+      console.error('Erro ao adicionar ao carrinho:', error);
+    };
   }
 
   return (
@@ -116,16 +141,44 @@ const ViewProduct: React.FC = () => {
       <Text style={styles.stockInfo}>Em estoque: {product.stock}</Text>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleAddToCart}>
-          <Text style={styles.buttonText}>Adicionar ao Carrinho</Text>
+        <TouchableOpacity style={styles.button} onPress={() => handleAddtoCart(productId)}>
+          <Text style={styles.buttonText}> Adicionar ao Carrinho</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handleBuyNow}>
           <Text style={styles.buttonText}>Comprar Agora</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>Produto adicionado ao carrinho!</Text>
+            <TouchableOpacity style={styles.modalButton}>
+              <Link
+                href="/(tabs)/cart"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Ir ao Carrinho</Text>
+              </Link>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Continuar Comprando</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView >
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -204,6 +257,38 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
+  },
+
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#007b5e',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 
 });

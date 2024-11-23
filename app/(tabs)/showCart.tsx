@@ -5,31 +5,9 @@ import axios from 'axios';
 import { getCookie } from '../services/CookieService';
 import AwesomeAlert from 'react-native-awesome-alerts'; // Importando o AwesomeAlert
 import { router } from 'expo-router';
+import { CartItem, Cart } from '@/interfaces/Cart';
 
-// Definindo a interface para os itens do carrinho
-interface CartItem {
-  product: {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    stock: number;
-    bar_code: string;
-    qr_code: string;
-    category: number;
-    image: string;
-  };
-  quantity: number;
-}
-
-// Definindo a interface para o carrinho
-interface Cart {
-  user: number;
-  cart_items: CartItem[];
-  total_value: string;
-}
-
-const CartScreen: React.FC = () => {
+const ShowCart: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totalValue, setTotalValue] = useState<string>('0.00');
   const [showAlert, setShowAlert] = useState(false); // Estado para controlar a exibição do alerta
@@ -85,9 +63,39 @@ const CartScreen: React.FC = () => {
     setShowAlert(true); // Exibe o alerta de sucesso ao finalizar a compra
   };
 
-  const cleanCart = async () => {
+  const handleOrder = async () => {
     var userId = await getCookie('id')
+    
+    const formattedCartItems = cartItems.map((item) => ({
+      product: item.product.id,
+      quantity: item.quantity,
+    }));
 
+    try {
+      var response = await axios.post('http://127.0.0.1:8000/order/create',
+        {
+          'client': userId,
+          'order_items': formattedCartItems
+        },
+        {
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+          }
+        },
+      )
+
+      console.log(response)
+
+      if (response.status === 201) {
+        cleanCart(Number(userId))
+      }
+    } catch (error) {
+      console.log('Erro ao salvar pedido: ' + error)
+    }
+  }
+
+
+  const cleanCart = async (userId: number) => {
     try {
       var response = await axios.delete('http://127.0.0.1:8000/cart/delete?user_id=' + userId,
         {
@@ -174,7 +182,7 @@ const CartScreen: React.FC = () => {
         confirmText="Ok"
         confirmButtonColor="#007b5e"
         onConfirmPressed={() => {
-          cleanCart();
+          handleOrder();
           setShowAlert(false);
           // setCartItems([]); // Limpa o carrinho após a compra
         }}
@@ -283,4 +291,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CartScreen;
+export default ShowCart;

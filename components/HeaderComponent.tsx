@@ -26,7 +26,7 @@ const HeaderComponent: React.FC = () => {
             <Link href="/(tabs)/listSupplier" style={styles.navButton}>
               <Text style={styles.navButtonText}>Fornecedores</Text>
             </Link>
-            <Link href="/(tabs)/cart" style={styles.navButton}>
+            <Link href="/(tabs)/showCart" style={styles.navButton}>
               <Text style={styles.navButtonText}>Carrinho</Text>
             </Link>
             <TouchableOpacity

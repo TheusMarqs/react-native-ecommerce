@@ -219,7 +219,7 @@ const ListProduct: React.FC = () => {
             <Text style={styles.modalText}>Produto adicionado ao carrinho!</Text>
             <TouchableOpacity style={styles.modalButton}>
               <Link
-                href="/(tabs)/cart"
+                href="/(tabs)/showCart"
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>Ir ao Carrinho</Text>

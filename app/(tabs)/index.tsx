@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import SplashComponent from '../../components/SplashComponent';
 import { router } from 'expo-router';
 import axios from 'axios';
-import { getCookie, saveCookie } from '../services/CookieService';
-import { getNewAccessToken } from '../services/TokenService';
+import { getCookie, saveCookie } from '../../services/CookieService';
+import { getNewAccessToken } from '../../services/TokenService';
 
 SplashScreen.preventAutoHideAsync(); // Impede a auto-desaparecer da splash screen.
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
-import { saveUserData } from '../services/CookieService';
+import { saveUserData } from '../../services/CookieService';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 const Register: React.FC = () => {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
-import { getCookie } from '../services/CookieService';
-import { getNewAccessToken } from '../services/TokenService';
+import { getCookie } from '../../services/CookieService';
+import { getNewAccessToken } from '../../services/TokenService';
 import { Order, OrderItem } from '@/interfaces/Order';
 
 const ListOrders: React.FC = () => {
@@ -13,9 +13,21 @@ const ListOrders: React.FC = () => {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [isSuperUser, setIsSuperUser] = useState<string | null>(null);
+    const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
 
     const params = useLocalSearchParams();
     const clientId = Number(params.id);
+
+    const getAccess = async () => {
+        let superUser = await getCookie('is_superuser');
+        if (!clientId && superUser == 'false') {
+            router.dismissAll();
+            router.replace('/(tabs)/listProduct')
+        }
+        setIsSuperUser(superUser);
+    }
 
     // Fetch orders
     const fetchOrders = async () => {
@@ -81,6 +93,7 @@ const ListOrders: React.FC = () => {
     };
 
     useEffect(() => {
+        getAccess();
         fetchOrders();
     }, []);
 
@@ -89,6 +102,35 @@ const ListOrders: React.FC = () => {
             {orderItem.quantity} x {orderItem.product.name} - R$ {Number(orderItem.product.price).toFixed(2)}
         </Text>
     );
+
+    const confirmDeleteOrder = (id: number) => {
+        setAlertMessage('Tem certeza que deseja excluir este pedido?');
+        setAlertType('error');
+        setShowAlert(true);
+        setConfirmAction(() => async () => {
+            try {
+                var response = await axios.delete(`http://127.0.0.1:8000/order/delete/${id}`,
+                    {
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                        },
+                        validateStatus: () => true,
+                    }
+                );
+
+                console.log(response);
+                setAlertMessage('Pedido excluído com sucesso.');
+                setAlertType('success');
+                setShowAlert(true);
+                fetchOrders();
+            } catch (error) {
+                setAlertMessage('Não foi possível excluir o pedido.');
+                setAlertType('error');
+                setShowAlert(true);
+                console.error(error);
+            }
+        });
+    };
 
     const renderOrder = ({ item }: { item: Order }) => (
         <View style={styles.orderCard}>
@@ -104,15 +146,25 @@ const ListOrders: React.FC = () => {
             <Text style={styles.orderDetail}>Total: R$ {Number(item.total).toFixed(2)}</Text>
             <Text style={styles.orderSubtitle}>Itens:</Text>
             {item.order_items.map(renderOrderItem)}
+
+            {!clientId && isSuperUser == 'true' ? (
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => confirmDeleteOrder(item.id)}
+                >
+                    <Text style={styles.buttonText}>Excluir</Text>
+                </TouchableOpacity>
+            ) : null}
+
         </View>
     );
 
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.header}>Pedidos</Text>
-            <Link style={styles.newOrderBtn} href="/(tabs)/createOrder">
+            {/* <Link style={styles.newOrderBtn} href="/(tabs)/createOrder">
                 <Text style={styles.buttonText}>Novo Pedido</Text>
-            </Link>
+            </Link> */}
             {loading ? (
                 <ActivityIndicator size="large" color="#007b5e" />
             ) : (
@@ -129,14 +181,24 @@ const ListOrders: React.FC = () => {
 
             <AwesomeAlert
                 show={showAlert}
-                title="Erro!"
+                title={alertType === 'success' ? 'Sucesso!' : alertType === 'error' ? 'Erro!' : 'Confirmação'}
                 message={alertMessage}
-                closeOnTouchOutside={true}
+                closeOnTouchOutside={alertType !== 'error'}
                 closeOnHardwareBackPress={false}
+                showCancelButton={alertType === 'error'}
+                cancelText="Cancelar"
+                cancelButtonColor="#aaa"
                 showConfirmButton={true}
-                confirmText="OK"
-                confirmButtonColor="#F44336"
-                onConfirmPressed={() => setShowAlert(false)}
+                confirmText={alertType === 'error' ? 'Excluir' : 'OK'}
+                confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
+                onCancelPressed={() => setShowAlert(false)}
+                onConfirmPressed={() => {
+                    if (confirmAction) {
+                        confirmAction();
+                        setConfirmAction(null);
+                    }
+                    setShowAlert(false);
+                }}
             />
         </ScrollView>
     );
@@ -207,6 +269,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
     },
+    deleteButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        backgroundColor: '#F44336',
+    }
 });
 
 export default ListOrders;

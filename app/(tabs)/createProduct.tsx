@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
-import { getCookie } from '../services/CookieService';
-import { getNewAccessToken } from '../services/TokenService';
+import { getCookie } from '../../services/CookieService';
+import { getNewAccessToken } from '../../services/TokenService';
 import { router, useLocalSearchParams } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
@@ -27,6 +27,15 @@ const createProduct: React.FC = () => {
     const [alertType, setAlertType] = useState<'success' | 'error'>('error');
 
     useEffect(() => {
+        const getAccess = async () => {
+            let superUser = await getCookie('is_superuser');
+    
+            if (superUser == 'false') {
+                router.dismissAll();
+                router.replace('/(tabs)/listProduct');
+            }
+        }
+
         const token = getCookie('access_token');
 
         const fetchCategories = async () => {
@@ -123,6 +132,7 @@ const createProduct: React.FC = () => {
             router.replace('/(tabs)/');
         };
 
+        getAccess();
         fetchCategories();
         fillForm();
     }, [productId]);

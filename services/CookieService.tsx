@@ -12,6 +12,7 @@ export const saveUserData = async (userData: any) => {
         saveCookie('email', userData.email);
         saveCookie('access_token', userData.access_token);
         saveCookie('refresh_token', userData.refresh_token);
+        saveCookie('is_superuser', userData.is_superuser);
 
         console.log('ID:', getCookie('id'));
         console.log('Username cookie:', getCookie('username'));
@@ -44,7 +45,7 @@ export const saveCookie = (name: string, value: string) => {
   document.cookie = `${name}=${value}; path=/; Secure; SameSite=Strict`;
 };
 
-const deleteCookie = (name: string) => {
+export const deleteCookie = (name: string) => {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 };
 

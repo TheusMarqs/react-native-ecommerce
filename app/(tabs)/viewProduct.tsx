@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
 import { useLocalSearchParams, router, Link } from 'expo-router';
-import { getCookie } from '../services/CookieService';
+import { getCookie } from '../../services/CookieService';
 import axios from 'axios';
-import { getNewAccessToken } from '../services/TokenService';
+import { getNewAccessToken } from '../../services/TokenService';
 
 const ViewProduct: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);

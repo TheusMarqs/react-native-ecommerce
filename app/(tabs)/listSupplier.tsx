@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import axios from 'axios';
 import { Link, router } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
-import { getCookie } from '../services/CookieService';
-import { getNewAccessToken } from '../services/TokenService';
+import { getCookie } from '../../services/CookieService';
+import { getNewAccessToken } from '../../services/TokenService';
 
 const ListSupplier: React.FC = () => {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -103,7 +103,17 @@ const ListSupplier: React.FC = () => {
         router.replace(`/createSupplier?id=${id}`);
     };
 
+    const getAccess = async () => {
+        let superUser = await getCookie('is_superuser');
+
+        if (superUser == 'false') {
+            router.dismissAll();
+            router.replace('/(tabs)/listProduct');
+        }
+    }
+
     useEffect(() => {
+        getAccess();
         fetchSuppliers();
     }, []);
 

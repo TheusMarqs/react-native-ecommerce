@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Para adicionar ícones
 import axios from 'axios';
-import { getCookie } from '../services/CookieService';
+import { getCookie } from '../../services/CookieService';
 import AwesomeAlert from 'react-native-awesome-alerts'; // Importando o AwesomeAlert
 import { router } from 'expo-router';
 import { CartItem, Cart } from '@/interfaces/Cart';

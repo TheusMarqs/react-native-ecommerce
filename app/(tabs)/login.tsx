@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
-import { saveUserData } from '../services/CookieService';
+import { saveUserData } from '../../services/CookieService';
 import AwesomeAlert from 'react-native-awesome-alerts';
 
 const login: React.FC = () => {

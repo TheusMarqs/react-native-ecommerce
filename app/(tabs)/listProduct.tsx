@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
-import { getCookie } from '../services/CookieService';
-import { getNewAccessToken } from '../services/TokenService';
+import { getCookie } from '../../services/CookieService';
+import { getNewAccessToken } from '../../services/TokenService';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -31,8 +31,14 @@ const ListProduct: React.FC = () => {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isSuperUser, setIsSuperUser] = useState<string | null>(null);
 
-  // Função para buscar os produtos da API
+  const getSuperUser = async () => {
+    let superUser = await getCookie('is_superuser');
+    setIsSuperUser(superUser);
+    console.log(superUser);
+  }
+
   const fetchProducts = async () => {
     try {
       const accessToken = getCookie('access_token');
@@ -89,6 +95,7 @@ const ListProduct: React.FC = () => {
   };
 
   useEffect(() => {
+    getSuperUser();
     fetchProducts();
   }, []);
 
@@ -109,7 +116,7 @@ const ListProduct: React.FC = () => {
           },
         })
 
-        console.log(response);
+      console.log(response);
     } catch (error) {
       console.error('Erro ao adicionar ao carrinho:', error);
     };
@@ -144,19 +151,21 @@ const ListProduct: React.FC = () => {
             <Text style={styles.buttonText}>Adicionar ao carrinho</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.actionIcons}>
-          <TouchableOpacity style={styles.mr} onPress={() => editProduct(item.id)}>
-            <Text>
-              <Icon name="edit" size={24} color="#007b5e" />
-            </Text>
-          </TouchableOpacity>
+        {isSuperUser == 'true' ? (
+          <View style={styles.actionIcons}>
+            <TouchableOpacity style={styles.mr} onPress={() => editProduct(item.id)}>
+              <Text>
+                <Icon name="edit" size={24} color="#007b5e" />
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => confirmDeleteProduct(item.id)}>
-            <Text>
-              <Icon name="trash" size={23} color="#FF3B30" />
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={() => confirmDeleteProduct(item.id)}>
+              <Text>
+                <Icon name="trash" size={23} color="#FF3B30" />
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
       </View>
     </View>
@@ -194,9 +203,12 @@ const ListProduct: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.headerTitle}>Produtos</Text>
-      <Link style={styles.newProductBtn} href="/(tabs)/createProduct">
-        <Text style={styles.txtNewProduct}>Novo produto</Text>
-      </Link>
+      {isSuperUser == 'true' ? (
+        <Link style={styles.newProductBtn} href="/(tabs)/createProduct">
+          <Text style={styles.txtNewProduct}>Novo produto</Text>
+        </Link>
+      ) : null}
+
 
       {/* Lista de Produtos */}
       <FlatList

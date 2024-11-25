@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import axios from 'axios';
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import { getCookie } from '../services/CookieService';
 import { getNewAccessToken } from '../services/TokenService';
@@ -12,6 +12,10 @@ const ListOrders: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+
+    const params = useLocalSearchParams();
+    const clientId = Number(params.id);
 
     // Fetch orders
     const fetchOrders = async () => {
@@ -20,6 +24,7 @@ const ListOrders: React.FC = () => {
             if (accessToken !== null) {
                 const orders = await fetchWithToken(accessToken);
                 if (orders) {
+                    setAccessToken(accessToken);
                     setOrders(orders);
                 }
             } else {
@@ -32,8 +37,15 @@ const ListOrders: React.FC = () => {
     };
 
     const fetchWithToken = async (token: string) => {
+        let url;
+        if (clientId) {
+            url = `http://127.0.0.1:8000/order/client/${clientId}`;
+        }
+        else {
+            url = 'http://127.0.0.1:8000/order/';
+        }
         try {
-            const response = await axios.get('http://127.0.0.1:8000/order/', {
+            const response = await axios.get(url, {
                 headers: {
                     'Authorization': 'Bearer ' + token,
                 },
@@ -47,6 +59,7 @@ const ListOrders: React.FC = () => {
                 console.log('Access token expired, refreshing...');
                 const newAccessToken = await getNewAccessToken();
                 if (newAccessToken) {
+                    setAccessToken(newAccessToken);
                     return await fetchWithToken(newAccessToken);
                 } else {
                     console.log('Refresh token invalid, redirecting to login...');
@@ -79,8 +92,14 @@ const ListOrders: React.FC = () => {
 
     const renderOrder = ({ item }: { item: Order }) => (
         <View style={styles.orderCard}>
-            <Text style={styles.orderTitle}>Pedido #{item.id}</Text>
-            <Text style={styles.orderDetail}>Cliente ID: {item.client}</Text>
+            {clientId ? (
+                <Text style={styles.orderTitle}>Pedido</Text>
+            ) : <Text style={styles.orderTitle}>Pedido #{item.id}</Text>
+            }
+            {clientId ? (
+                null
+            ) : <Text style={styles.orderDetail}>Cliente ID: {item.client}</Text>
+            }
             <Text style={styles.orderDetail}>Data: {new Date(item.date).toLocaleString()}</Text>
             <Text style={styles.orderDetail}>Total: R$ {Number(item.total).toFixed(2)}</Text>
             <Text style={styles.orderSubtitle}>Itens:</Text>

@@ -49,7 +49,7 @@ const Register: React.FC = () => {
     try {
       // Envia os dados para a API
       const response = await axios.post(
-        'http://127.0.0.1:8000/auth/register',
+        'https://backend-pm.onrender.com/auth/register',
         {
           username,
           email,

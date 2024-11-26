@@ -34,7 +34,7 @@ const ListSupplier: React.FC = () => {
 
     const fetchWithToken = async (token: string) => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/supplier/', {
+            const response = await axios.get('https://backend-pm.onrender.com/supplier/', {
                 headers: {
                     'Authorization': 'Bearer ' + token,
                 },
@@ -76,7 +76,7 @@ const ListSupplier: React.FC = () => {
         setConfirmAction(() => async () => {
             try {
                 const accessToken = getCookie('access_token');
-                await axios.delete(`http://127.0.0.1:8000/supplier/delete/${id}`,
+                await axios.delete(`https://backend-pm.onrender.com/supplier/delete/${id}`,
                     {
                         headers: {
                             'Authorization': 'Bearer ' + accessToken,

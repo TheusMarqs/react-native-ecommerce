@@ -59,7 +59,7 @@ const ListProduct: React.FC = () => {
 
   const fetchWithToken = async (token: string) => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/product/', {
+      const response = await axios.get('https://backend-pm.onrender.com/product/', {
         headers: {
           'Authorization': 'Bearer ' + token,
         },
@@ -104,7 +104,7 @@ const ListProduct: React.FC = () => {
     try {
       var userId = await getCookie('id');
       console.log("userid", userId, "token", accessToken)
-      const response = await axios.post('http://127.0.0.1:8000/cart/item/create',
+      const response = await axios.post('https://backend-pm.onrender.com/cart/item/create',
         {
           "user_id": userId,
           "product_id": productId,
@@ -181,7 +181,7 @@ const ListProduct: React.FC = () => {
     setShowAlert(true);
     setConfirmAction(() => async () => {
       try {
-        await axios.delete(`http://127.0.0.1:8000/product/delete/${id}`, {
+        await axios.delete(`https://backend-pm.onrender.com/product/delete/${id}`, {
           headers: {
             'Authorization': 'Bearer ' + accessToken
           },

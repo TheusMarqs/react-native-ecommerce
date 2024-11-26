@@ -59,7 +59,7 @@ const createProduct: React.FC = () => {
         const fillForm = async () => {
             if (productId) {
                 try {
-                    const response = await axios.get(`http://127.0.0.1:8000/product/${productId}`, {
+                    const response = await axios.get(`https://backend-pm.onrender.com/product/${productId}`, {
                         headers: {
                             Authorization: 'Bearer ' + token,
                         },
@@ -97,7 +97,7 @@ const createProduct: React.FC = () => {
 
         const fetchWithToken = async (token: string) => {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/category/', {
+                const response = await axios.get('https://backend-pm.onrender.com/category/', {
                     headers: {
                         Authorization: 'Bearer ' + token,
                     },
@@ -192,14 +192,14 @@ const createProduct: React.FC = () => {
 
             let response;
             if (productId !== undefined) {
-                response = await axios.put(`http://127.0.0.1:8000/product/update/${productId}`, formData, {
+                response = await axios.put(`https://backend-pm.onrender.com/product/update/${productId}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'Authorization': 'Bearer ' + accessToken,
                     },
                 });
             } else {
-                response = await axios.post('http://127.0.0.1:8000/product/create', formData, {
+                response = await axios.post('https://backend-pm.onrender.com/product/create', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'Authorization': 'Bearer ' + accessToken,

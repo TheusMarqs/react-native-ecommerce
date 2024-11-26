@@ -18,7 +18,7 @@ const ShowCart: React.FC = () => {
     try {
       var token = await getCookie('access_token')
       var userId = await getCookie('id');
-      const response = await axios.get('http://127.0.0.1:8000/cart/?user_id=' + userId, {
+      const response = await axios.get('https://backend-pm.onrender.com/cart/?user_id=' + userId, {
         headers: {
           Authorization: 'Bearer ' + token
         },
@@ -37,7 +37,7 @@ const ShowCart: React.FC = () => {
   const removeItemFromCart = async (productId: number) => {
     var userId = await getCookie('id')
     try {
-      var response = await axios.delete('http://127.0.0.1:8000/cart/item/delete',
+      var response = await axios.delete('https://backend-pm.onrender.com/cart/item/delete',
         {
           data: {
             user_id: userId,
@@ -72,7 +72,7 @@ const ShowCart: React.FC = () => {
     }));
 
     try {
-      var response = await axios.post('http://127.0.0.1:8000/order/create',
+      var response = await axios.post('https://backend-pm.onrender.com/order/create',
         {
           'client': userId,
           'order_items': formattedCartItems
@@ -97,7 +97,7 @@ const ShowCart: React.FC = () => {
 
   const cleanCart = async (userId: number) => {
     try {
-      var response = await axios.delete('http://127.0.0.1:8000/cart/delete?user_id=' + userId,
+      var response = await axios.delete('https://backend-pm.onrender.com/cart/delete?user_id=' + userId,
         {
           headers: {
             'Authorization': 'Bearer ' + accessToken,

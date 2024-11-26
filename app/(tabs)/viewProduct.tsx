@@ -34,7 +34,7 @@ const ViewProduct: React.FC = () => {
 
     const fetchWithToken = async (token: string) => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/product/${productId}`, {
+        const response = await axios.get(`https://backend-pm.onrender.com/product/${productId}`, {
           headers: {
             'Authorization': 'Bearer ' + token,
           },
@@ -96,7 +96,7 @@ const ViewProduct: React.FC = () => {
     try {
       var userId = await getCookie('id');
       console.log("userid", userId, "token", accessToken)
-      const response = await axios.post('http://127.0.0.1:8000/cart/item/create',
+      const response = await axios.post('https://backend-pm.onrender.com/cart/item/create',
         {
           "user_id": userId,
           "product_id": productId,

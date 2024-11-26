@@ -51,10 +51,10 @@ const ListOrders: React.FC = () => {
     const fetchWithToken = async (token: string) => {
         let url;
         if (clientId) {
-            url = `http://127.0.0.1:8000/order/client/${clientId}`;
+            url = `https://backend-pm.onrender.com/order/client/${clientId}`;
         }
         else {
-            url = 'http://127.0.0.1:8000/order/';
+            url = 'https://backend-pm.onrender.com/order/';
         }
         try {
             const response = await axios.get(url, {
@@ -109,7 +109,7 @@ const ListOrders: React.FC = () => {
         setShowAlert(true);
         setConfirmAction(() => async () => {
             try {
-                var response = await axios.delete(`http://127.0.0.1:8000/order/delete/${id}`,
+                var response = await axios.delete(`https://backend-pm.onrender.com/order/delete/${id}`,
                     {
                         headers: {
                             'Authorization': 'Bearer ' + accessToken,

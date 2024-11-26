@@ -4,7 +4,7 @@ import axios from "axios";
 export const getNewAccessToken = async () => {
     const refreshToken = getCookie('refresh_token');
     if (refreshToken !== null) {
-        const response = await axios.post('http://127.0.0.1:8000/token/refresh', {
+        const response = await axios.post('https://backend-pm.onrender.com/token/refresh', {
             refresh: refreshToken,
         }, {
             validateStatus: () => true,

@@ -62,7 +62,7 @@ const CreateSupplier: React.FC = () => {
         const fillForm = async () => {
             if (supplierId) {
                 try {
-                    const response = await axios.get(`http://127.0.0.1:8000/supplier/${supplierId}`, {
+                    const response = await axios.get(`https://backend-pm.onrender.com/supplier/${supplierId}`, {
                         headers: {
                             Authorization: 'Bearer ' + token,
                         },
@@ -94,7 +94,7 @@ const CreateSupplier: React.FC = () => {
 
         const fetchWithToken = async (token: string) => {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/category/', {
+                const response = await axios.get('https://backend-pm.onrender.com/category/', {
                     headers: {
                         Authorization: 'Bearer ' + token,
                     },
@@ -161,13 +161,13 @@ const CreateSupplier: React.FC = () => {
         try {
             let response;
             if (supplierId !== undefined) {
-                response = await axios.put(`http://127.0.0.1:8000/supplier/update/${supplierId}`, formData, {
+                response = await axios.put(`https://backend-pm.onrender.com/supplier/update/${supplierId}`, formData, {
                     headers: {
                         Authorization: 'Bearer ' + accessToken,
                     },
                 });
             } else {
-                response = await axios.post('http://127.0.0.1:8000/supplier/create', formData, {
+                response = await axios.post('https://backend-pm.onrender.com/supplier/create', formData, {
                     headers: {
                         Authorization: 'Bearer ' + accessToken,
                     },

@@ -33,7 +33,7 @@ const HeaderComponent: React.FC = () => {
     const refreshToken = await getCookie('refresh_token');
 
     const response = await axios.post(
-      'http://127.0.0.1:8000/auth/logout',
+      'https://backend-pm.onrender.com/auth/logout',
       { refresh: refreshToken },
       {
         headers: {

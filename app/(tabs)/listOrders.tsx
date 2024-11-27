@@ -32,7 +32,7 @@ const ListOrders: React.FC = () => {
     // Fetch orders
     const fetchOrders = async () => {
         try {
-            const accessToken = getCookie('access_token');
+            const accessToken = await getCookie('access_token');
             if (accessToken !== null) {
                 const orders = await fetchWithToken(accessToken);
                 if (orders) {

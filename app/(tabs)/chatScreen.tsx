@@ -11,7 +11,7 @@ const ChatScreen = () => {
     const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]);
 
     useEffect(() => {
-        const ws = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${roomName}/`);
+        const ws = new WebSocket(`wss://backend-pm.onrender.com/ws/chat/${roomName}/`);
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);

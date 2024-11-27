@@ -17,7 +17,7 @@ const ListSupplier: React.FC = () => {
     // Fetch suppliers
     const fetchSuppliers = async () => {
         try {
-            const accessToken = getCookie('access_token');
+            const accessToken = await getCookie('access_token');
             if (accessToken !== null) {
                 const suppliers = await fetchWithToken(accessToken);
                 if (suppliers) {
@@ -75,7 +75,7 @@ const ListSupplier: React.FC = () => {
         setShowAlert(true);
         setConfirmAction(() => async () => {
             try {
-                const accessToken = getCookie('access_token');
+                const accessToken = await getCookie('access_token');
                 await axios.delete(`https://backend-pm.onrender.com/supplier/delete/${id}`,
                     {
                         headers: {

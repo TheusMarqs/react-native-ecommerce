@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import SplashComponent from '../../components/SplashComponent';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
 import { getCookie, saveCookie } from '../../services/CookieService';
@@ -15,13 +17,15 @@ export default function HomeScreen() {
   useEffect(() => {
     // Função para verificar o login do usuário
     const verifyLogin = async () => {
-      const accessToken = getCookie('access_token');
+      
+      const accessToken = await getCookie('access_token');
 
       try {
         if (accessToken !== null) {
+          console.log(accessToken);
           const tokenResponse = await axios.post(
             'https://backend-pm.onrender.com/token/verify',
-            { token: accessToken },
+            { "token": accessToken },
             {
               validateStatus: () => true,
             }
@@ -69,22 +73,22 @@ export default function HomeScreen() {
     prepare();
   }, []); // Dependências vazias para garantir que a verificação aconteça apenas uma vez
 
-  // if (!appReady) {
-  //   return <SplashComponent />;
-  // }
+  if (!appReady) {
+    return <SplashComponent />;
+  }
 
-  // if (isLoggedIn === null) {
-  //   // Enquanto aguardamos a resposta da verificação de login
-  //   return <SplashComponent />;
-  // }
+  if (isLoggedIn === null) {
+    // Enquanto aguardamos a resposta da verificação de login
+    return <SplashComponent />;
+  }
 
-  // // Se o usuário estiver logado, exibe o ProductList
-  // if (isLoggedIn) {
-  //   return (
-  //     router.dismissAll(),
-  //     router.replace('/(tabs)/listProduct')
-  //   )
-  // }
+  // Se o usuário estiver logado, exibe o ProductList
+  if (isLoggedIn) {
+    return (
+      router.dismissAll(),
+      router.replace('/(tabs)/listProduct')
+    )
+  }
 
   return (
     router.dismissAll(),

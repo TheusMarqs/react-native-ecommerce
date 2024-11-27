@@ -41,7 +41,7 @@ const ListProduct: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const accessToken = getCookie('access_token');
+      const accessToken = await getCookie('access_token');
       if (accessToken !== null) {
         const products = await fetchWithToken(accessToken);
         if (products) {

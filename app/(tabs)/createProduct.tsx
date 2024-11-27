@@ -34,11 +34,10 @@ const createProduct: React.FC = () => {
                 router.dismissAll();
                 router.replace('/(tabs)/listProduct');
             }
-        }
-
-        const token = getCookie('access_token');
+        }   
 
         const fetchCategories = async () => {
+            const token = await getCookie('access_token');
             try {
                 if (token !== null) {
                     const categories = await fetchWithToken(token);
@@ -61,7 +60,7 @@ const createProduct: React.FC = () => {
                 try {
                     const response = await axios.get(`https://backend-pm.onrender.com/product/${productId}`, {
                         headers: {
-                            Authorization: 'Bearer ' + token,
+                            Authorization: 'Bearer ' + accessToken,
                         },
                         validateStatus: () => true,
                     });

@@ -39,9 +39,10 @@ const CreateSupplier: React.FC = () => {
             }
         }
 
-        const token = getCookie('access_token');
+        
 
         const fetchCategories = async () => {
+            const token = await getCookie('access_token');
             try {
                 if (token !== null) {
                     const categories = await fetchWithToken(token);
@@ -64,7 +65,7 @@ const CreateSupplier: React.FC = () => {
                 try {
                     const response = await axios.get(`https://backend-pm.onrender.com/supplier/${supplierId}`, {
                         headers: {
-                            Authorization: 'Bearer ' + token,
+                            Authorization: 'Bearer ' + accessToken,
                         },
                         validateStatus: () => true,
                     });

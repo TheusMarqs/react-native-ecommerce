@@ -14,11 +14,11 @@ export const saveUserData = async (userData: any) => {
       saveCookie('refresh_token', userData.refresh_token);
       saveCookie('is_superuser', userData.is_superuser);
 
-      console.log('ID:', getCookie('id'));
-      console.log('Username cookie:', getCookie('username'));
-      console.log('Email cookie:', getCookie('email'));
-      console.log('Access token cookie:', getCookie('access_token'));
-      console.log('Refresh Token cookie:', getCookie('refresh_token'));
+      console.log('ID:', await getCookie('id'));
+      console.log('Username cookie:', await getCookie('username'));
+      console.log('Email cookie:', await getCookie('email'));
+      console.log('Access token cookie:', await getCookie('access_token'));
+      console.log('Refresh Token cookie:', await getCookie('refresh_token'));
 
       console.log('Informações salvas com sucesso');
 
@@ -41,9 +41,13 @@ export const saveUserData = async (userData: any) => {
   }
 };
 
-export const saveCookie = (name: string, value: string) => {
-  console.log('fera')
-  document.cookie = `${name}=${value}; path=/; Secure; SameSite=Strict`;
+export const saveCookie = async (name: string, value: string) => {
+  if (Platform.OS === 'web') {
+    document.cookie = `${name}=${value}; path=/; Secure; SameSite=Strict`;
+  }
+  else {
+    await SecureStore.setItemAsync(name, value);
+  }
 };
 
 export const deleteCookie = (name: string) => {
@@ -52,7 +56,6 @@ export const deleteCookie = (name: string) => {
 
 export const getCookie = async (name: string) => {
   if (Platform.OS === 'web') {
-
 
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');

@@ -16,7 +16,7 @@ const ViewProduct: React.FC = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const token = getCookie('access_token');
+        const token = await getCookie('access_token');
         if (token !== null) {
           const product = await fetchWithToken(token);
           if (product) {

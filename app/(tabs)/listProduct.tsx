@@ -271,7 +271,7 @@ const ListProduct: React.FC = () => {
           setShowAlert(false);
         }}
       />
-      <FloatingChatButton roomName="1" username={username || ''} />
+      <FloatingChatButton roomName={username || ''} username={username || ''} />
 
     </ScrollView>
   );

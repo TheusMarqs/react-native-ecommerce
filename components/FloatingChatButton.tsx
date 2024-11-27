@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native';
-import { AntDesign } from '@expo/vector-icons'; // Instale se necessário: expo install @expo/vector-icons
+import { AntDesign } from '@expo/vector-icons';
 
 const FloatingChatButton = ({ roomName, username }: { roomName: string; username: string }) => {
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -11,7 +11,7 @@ const FloatingChatButton = ({ roomName, username }: { roomName: string; username
     useEffect(() => {
         if (isChatOpen) {
             const ws = new WebSocket(`wss://backend-pm.onrender.com/ws/chat/${roomName}/`);
-            setMessages([]);
+            setMessages([]);  // Limpar mensagens ao abrir o chat
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 setMessages((prev) => [
@@ -51,10 +51,19 @@ const FloatingChatButton = ({ roomName, username }: { roomName: string; username
                     <FlatList
                         data={messages}
                         renderItem={({ item }) => (
-                            <Text style={styles.message}>
-                                <Text style={styles.sender}>{item.sender}: </Text>
-                                {item.message}
-                            </Text>
+                            <View
+                                style={[
+                                    styles.messageContainer,
+                                    item.sender === username
+                                        ? styles.clientMessage
+                                        : styles.sellerMessage,
+                                ]}
+                            >
+                                <Text style={styles.message}>
+                                    <Text style={styles.sender}>{item.sender}: </Text>
+                                    {item.message}
+                                </Text>
+                            </View>
                         )}
                         keyExtractor={(_, index) => index.toString()}
                         style={styles.messageList}
@@ -90,21 +99,38 @@ const styles = StyleSheet.create({
     },
     chatContainer: {
         flex: 1,
-        width: '30%',
+        width: '70%',
         backgroundColor: '#fff',
         margin: 20,
         borderRadius: 10,
         padding: 10,
         elevation: 10,
-        alignSelf: 'flex-end'
+        alignSelf: 'flex-end',
     },
     messageList: {
         flex: 1,
         marginBottom: 10,
     },
-    message: {
+    messageContainer: {
         padding: 5,
+        marginBottom: 10,
+        borderRadius: 10,
+        maxWidth: '70%',
+    },
+    clientMessage: {
+        backgroundColor: '#d1e7dd',  // Verde claro para cliente
+
+        alignSelf: 'flex-end',
+    },
+    sellerMessage: {
+        backgroundColor: '#fff',  // Branco para vendedor
+        borderColor: '#ddd',
+        borderWidth: 1,
+        alignSelf: 'flex-start',
+    },
+    message: {
         fontSize: 16,
+        color: '#000',
     },
     sender: {
         fontWeight: 'bold',
@@ -112,6 +138,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: 10,
     },
     input: {
         flex: 1,

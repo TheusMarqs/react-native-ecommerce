@@ -17,6 +17,7 @@ import { getCookie } from '../../services/CookieService';
 import { getNewAccessToken } from '../../services/TokenService';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import FloatingChatButton from '@/components/FloatingChatButton';
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -32,9 +33,12 @@ const ListProduct: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isSuperUser, setIsSuperUser] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
-  const getSuperUser = async () => {
+  const getUserInfo = async () => {
     let superUser = await getCookie('is_superuser');
+    let username = await getCookie('username');
+    setUsername(username);
     setIsSuperUser(superUser);
     console.log(superUser);
   }
@@ -95,7 +99,7 @@ const ListProduct: React.FC = () => {
   };
 
   useEffect(() => {
-    getSuperUser();
+    getUserInfo();
     fetchProducts();
   }, []);
 
@@ -267,6 +271,8 @@ const ListProduct: React.FC = () => {
           setShowAlert(false);
         }}
       />
+      <FloatingChatButton roomName="1" username={username || ''} />
+
     </ScrollView>
   );
 };

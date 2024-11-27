@@ -1,49 +1,86 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import axios from 'axios'; // Importe o Axios
 
-const ChatScreen = () => {
+const AdminChatScreen = () => {
     const params = useLocalSearchParams();
-    const roomName = params.roomName as string;
-    const username = params.username as string;
+    const [chats, setChats] = useState<string[]>([]); // Lista de chats disponíveis
+    const [selectedChat, setSelectedChat] = useState<string | null>(null); // Chat selecionado
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [message, setMessage] = useState<string>('');
     const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]);
 
+    // Buscar os chats disponíveis do backend
     useEffect(() => {
-        const ws = new WebSocket(`wss://backend-pm.onrender.com/ws/chat/${roomName}/`);
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Received data:', data); // Verifique os dados recebidos
-            setMessages((prev) => [
-                ...prev,
-                { sender: data.sender || 'Unknown', message: data.message },
-            ]);
+        const fetchChats = async () => {
+            try {
+                const response = await axios.get('https://backend-pm.onrender.com/ws/chats');
+                setChats(response.data); // Supondo que o backend retorna uma lista de strings
+            } catch (error) {
+                console.error('Erro ao buscar os chats:', error);
+            }
         };
 
-        setSocket(ws);
+        fetchChats();
+    }, []);
 
-        return () => {
-            ws.close();
-        };
-    }, [roomName, username]); // Adicionamos `username` à dependência
+    // Conectar ao WebSocket quando um chat for selecionado
+    useEffect(() => {
+        if (selectedChat) {
+            const ws = new WebSocket(`wss://backend-pm.onrender.com/ws/chat/${selectedChat}/`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received data:', data);
+                setMessages((prev) => [
+                    ...prev,
+                    { sender: data.sender || 'Unknown', message: data.message },
+                ]);
+            };
+
+            setSocket(ws);
+
+            return () => {
+                ws.close();
+                setMessages([]); // Limpar mensagens ao sair do chat
+            };
+        }
+    }, [selectedChat]);
 
     const sendMessage = () => {
         if (socket && message.trim()) {
             const messagePayload = {
                 message,
-                sender: username, // Envia o username diretamente
+                sender: 'Vendedor', // Enviar como administrador
             };
 
-            console.log('Sending message:', messagePayload); // Verifique a mensagem antes de enviar
+            console.log('Sending message:', messagePayload);
             socket.send(JSON.stringify(messagePayload));
             setMessage('');
         }
     };
 
+    if (!selectedChat) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.title}>Chats Disponíveis</Text>
+                <FlatList
+                    data={chats}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity style={styles.chatItem} onPress={() => setSelectedChat(item)}>
+                            <Text style={styles.chatName}>{item}</Text>
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item, index) => index.toString()}
+                />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
+            <Text style={styles.title}>Chat: {selectedChat}</Text>
             <FlatList
                 data={messages}
                 renderItem={({ item }) => (
@@ -63,6 +100,7 @@ const ChatScreen = () => {
                 />
                 <Button title="Enviar" onPress={sendMessage} />
             </View>
+            <Button title="Voltar" onPress={() => setSelectedChat(null)} />
         </View>
     );
 };
@@ -71,6 +109,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    chatItem: {
+        padding: 15,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+        backgroundColor: '#f9f9f9',
+    },
+    chatName: {
+        fontSize: 16,
     },
     message: {
         padding: 5,
@@ -93,4 +147,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ChatScreen;
+export default AdminChatScreen;

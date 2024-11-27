@@ -58,9 +58,10 @@ const createProduct: React.FC = () => {
         const fillForm = async () => {
             if (productId) {
                 try {
+                    let token = await getCookie('access_token');
                     const response = await axios.get(`https://backend-pm.onrender.com/product/${productId}`, {
                         headers: {
-                            Authorization: 'Bearer ' + accessToken,
+                            Authorization: 'Bearer ' + token,
                         },
                         validateStatus: () => true,
                     });

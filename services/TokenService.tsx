@@ -2,10 +2,10 @@ import { getCookie, saveCookie } from "./CookieService";
 import axios from "axios";
 
 export const getNewAccessToken = async () => {
-    const refreshToken = getCookie('refresh_token');
+    const refreshToken = await getCookie('refresh_token');
     if (refreshToken !== null) {
         const response = await axios.post('https://backend-pm.onrender.com/token/refresh', {
-            refresh: refreshToken,
+            "refresh": refreshToken,
         }, {
             validateStatus: () => true,
         });

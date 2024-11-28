@@ -43,6 +43,7 @@ const ListSupplier: React.FC = () => {
 
             if (response.status === 200) {
                 console.log('Suppliers received');
+                console.log(response.data)
                 return response.data;
             } else if (response.status === 401) {
                 console.log('Access token expired, refreshing...');

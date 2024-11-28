@@ -67,14 +67,14 @@ const HeaderComponent: React.FC = () => {
           <>
             {isSuperUser === 'true' ? (
               <View style={{ flexDirection: 'row' }}>
-                <Link href="/(tabs)/adminChat" style={styles.navButton}>
+                {/* <Link href="/(tabs)/adminChat" style={styles.navButton}>
                   <Text style={styles.navButtonText}>Mensagens</Text>
                 </Link>
                 <Link href="/(tabs)/listOrders" style={styles.navButton}>
                   <Text style={styles.navButtonText}>Pedidos</Text>
-                </Link>
-                <Link href="/(tabs)/listSupplier" style={styles.navButton}>
-                  <Text style={styles.navButtonText}>Fornecedores</Text>
+                </Link> */}
+                <Link href="/(tabs)/adminPage" style={styles.navButton}>
+                  <Text style={styles.navButtonText}>Área administrativa</Text>
                 </Link>
               </View>
             ) : null}

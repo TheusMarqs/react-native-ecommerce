@@ -149,7 +149,7 @@ const ShowCart: React.FC = () => {
           <View style={styles.summary}>
             <Text style={styles.totalText}>Total: R$ {totalValue}</Text>
             <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-              <Text style={styles.checkoutButtonText}>Finalizar Compra</Text>
+              <Text style={styles.checkoutButtonText}>Prosseguir para o pedido</Text>
             </TouchableOpacity>
           </View>
         </>

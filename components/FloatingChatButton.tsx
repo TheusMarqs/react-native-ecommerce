@@ -75,7 +75,10 @@ const FloatingChatButton = ({ roomName, username }: { roomName: string; username
                             value={message}
                             onChangeText={setMessage}
                         />
-                        <Button title="Enviar" onPress={sendMessage} />
+                        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                            <AntDesign name="right" size={24} color="#fff" />
+                        </TouchableOpacity>
+                        {/* <Button title="Enviar" onPress={sendMessage} /> */}
                     </View>
                     <Button title="Fechar Chat" onPress={() => setIsChatOpen(false)} color="#d9534f" />
                 </View>
@@ -99,7 +102,7 @@ const styles = StyleSheet.create({
     },
     chatContainer: {
         flex: 1,
-        width: '70%',
+        width: '30%',
         backgroundColor: '#fff',
         margin: 20,
         borderRadius: 10,
@@ -147,6 +150,15 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         padding: 10,
         marginRight: 10,
+        marginBottom: 10,
+    },
+    sendButton: {
+        backgroundColor: '#007bff',
+        padding: 9,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
     },
 });
 

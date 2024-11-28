@@ -120,7 +120,7 @@ const HeaderComponent: React.FC = () => {
                           handleLogout();
                         }}
                       >
-                        <Text style={styles.dropdownText}>Logout</Text>
+                        <Text style={styles.dropdownText}>Sair</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

@@ -1,18 +1,18 @@
-import { useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios'; // Importe o Axios
 import { getCookie } from '@/services/CookieService';
 import { AntDesign } from '@expo/vector-icons'; // Ícones para botões
+import AwesomeAlert from 'react-native-awesome-alerts'; // Importe o AwesomeAlert
 
 const AdminChatScreen = () => {
-    const params = useLocalSearchParams();
-    const [chats, setChats] = useState<string[]>([]); // Lista de chats disponíveis
-    const [selectedChat, setSelectedChat] = useState<string | null>(null); // Chat selecionado
+    const [chats, setChats] = useState<string[]>([]);
+    const [selectedChat, setSelectedChat] = useState<string | null>(null);
     const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [message, setMessage] = useState<string>(''); // Mensagem a ser enviada
-    const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]); // Mensagens do chat
-    const [newMessages, setNewMessages] = useState<Record<string, boolean>>({}); // Nova mensagem para cada chat
+    const [message, setMessage] = useState<string>('');
+    const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
     // Buscar os chats disponíveis do backend
     useEffect(() => {
@@ -24,7 +24,7 @@ const AdminChatScreen = () => {
                         "Authorization": "Bearer " + token,
                     },
                 });
-                setChats(response.data); // Supondo que o backend retorna uma lista de chats
+                setChats(response.data);
             } catch (error) {
                 console.error('Erro ao buscar os chats:', error);
             }
@@ -40,19 +40,10 @@ const AdminChatScreen = () => {
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                console.log('Received data:', data);
                 setMessages((prev) => [
                     ...prev,
                     { sender: data.sender || 'Unknown', message: data.message },
                 ]);
-
-                // Se a mensagem for do cliente, marcar como nova
-                if (data.sender !== 'Vendedor') {
-                    setNewMessages((prev) => ({
-                        ...prev,
-                        [selectedChat]: true, // Marca que há uma nova mensagem
-                    }));
-                }
             };
 
             setSocket(ws);
@@ -68,12 +59,33 @@ const AdminChatScreen = () => {
         if (socket && message.trim()) {
             const messagePayload = {
                 message,
-                sender: 'Vendedor', // Enviar como administrador
+                sender: 'Vendedor',
             };
-
-            console.log('Sending message:', messagePayload);
             socket.send(JSON.stringify(messagePayload));
             setMessage('');
+        }
+    };
+
+    const handleDeleteChat = async (chat: string) => {
+        let token = await getCookie('access_token');
+        try {
+            const response = await axios.delete(
+                `https://backend-pm.onrender.com/ws/delete/${chat}`,
+                {
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                    },
+                }
+            );
+            setAlertMessage(response.data.success);
+            setShowAlert(true);
+
+            // Atualizar a lista de chats
+            setChats((prev) => prev.filter((c) => c !== chat));
+        } catch (error) {
+            console.error('Erro ao deletar o chat:', error);
+            setAlertMessage("Não foi possível deletar o chat.");
+            setShowAlert(true);
         }
     };
 
@@ -84,17 +96,23 @@ const AdminChatScreen = () => {
                 <FlatList
                     data={chats}
                     renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.chatItem}
-                            onPress={() => setSelectedChat(item)}
-                        >
-                            <View style={styles.chatNameContainer}>
-                                <Text style={styles.chatName}>{item}</Text>
-                                {newMessages[item] && (
-                                    <View style={styles.notificationDot} />
-                                )}
+                        <View style={styles.chatItem}>
+                            <Text>Chat {item}</Text>
+                            <View style={styles.chatActions}>
+                                <TouchableOpacity
+                                    style={styles.enterChatButton}
+                                    onPress={() => setSelectedChat(item)}
+                                >
+                                    <AntDesign name="rightcircleo" size={20} color="#007bff" />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.deleteChatButton}
+                                    onPress={() => handleDeleteChat(item)} // Função para excluir o chat
+                                >
+                                    <AntDesign name="closecircleo" size={20} color="red" />
+                                </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
+                        </View>
                     )}
                     keyExtractor={(item, index) => index.toString()}
                 />
@@ -117,9 +135,7 @@ const AdminChatScreen = () => {
                     <View
                         style={[
                             styles.messageContainer,
-                            item.sender === 'Vendedor'
-                                ? styles.adminMessage
-                                : styles.clientMessage,
+                            item.sender === 'Vendedor' ? styles.adminMessage : styles.clientMessage,
                         ]}
                     >
                         <Text style={styles.message}>
@@ -143,6 +159,20 @@ const AdminChatScreen = () => {
                     <AntDesign name="right" size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
+
+            <AwesomeAlert
+                show={showAlert}
+                showProgress={false}
+                title="Resultado"
+                message={alertMessage}
+                closeOnTouchOutside={true}
+                closeOnHardwareBackPress={false}
+                showCancelButton={false}
+                showConfirmButton={true}
+                confirmText="OK"
+                confirmButtonColor="#007bff"
+                onConfirmPressed={() => setShowAlert(false)}
+            />
         </View>
     );
 };
@@ -175,6 +205,9 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     chatItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         padding: 15,
         borderWidth: 1,
         borderColor: '#ddd',
@@ -186,21 +219,14 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         elevation: 2,
     },
-    chatNameContainer: {
+    chatActions: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
     },
-    chatName: {
-        fontSize: 16,
-        color: '#333',
+    enterChatButton: {
+        marginRight: 10,
     },
-    notificationDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: '#28a745', // Bolinha verde
-    },
+    deleteChatButton: {},
     messageList: {
         flex: 1,
         marginBottom: 10,
@@ -212,12 +238,12 @@ const styles = StyleSheet.create({
         maxWidth: '70%',
     },
     adminMessage: {
-        backgroundColor: '#007bff', // Mensagem do vendedor
+        backgroundColor: '#d1e7dd', // Mensagem do vendedor
         alignSelf: 'flex-end',
         color: '#fff',
     },
     clientMessage: {
-        backgroundColor: '#d1e7dd', // Mensagem do cliente
+        backgroundColor: '#fff', // Mensagem do cliente
         alignSelf: 'flex-start',
         borderColor: '#ccc',
         borderWidth: 1,
@@ -250,6 +276,12 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    endChatButton: {
+        marginLeft: 'auto',
+        backgroundColor: 'red',
+        padding: 10,
+        borderRadius: 8,
     },
 });
 

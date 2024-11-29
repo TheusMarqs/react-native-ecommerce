@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import { useRouter, Link, usePathname } from 'expo-router';
 import axios from 'axios';
 import { deleteCookie, getCookie } from '@/services/CookieService';
@@ -57,81 +57,76 @@ const HeaderComponent: React.FC = () => {
     }
   };
 
-  return (
-    <View style={styles.header}>
-      <Link href="/(tabs)/listProduct" style={styles.logo}>
-        MW Store
-      </Link>
-      <View style={styles.navButtons}>
-        {!isLoginOrRegisterPage && (
-          <>
-            {isSuperUser === 'true' ? (
-              <View style={{ flexDirection: 'row' }}>
-                {/* <Link href="/(tabs)/adminChat" style={styles.navButton}>
-                  <Text style={styles.navButtonText}>Mensagens</Text>
-                </Link>
-                <Link href="/(tabs)/listOrders" style={styles.navButton}>
-                  <Text style={styles.navButtonText}>Pedidos</Text>
-                </Link> */}
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.header}>
+        <Link href="/(tabs)/listProduct" style={styles.logo}>
+          MW Store
+        </Link>
+        <View style={styles.navButtons}>
+          {!isLoginOrRegisterPage && (
+            <>
+              {isSuperUser === 'true' && (
                 <Link href="/(tabs)/adminPage" style={styles.navButton}>
                   <Text style={styles.navButtonText}>Área administrativa</Text>
                 </Link>
-              </View>
-            ) : null}
+              )}
 
-            <Link href="/(tabs)/showCart" style={styles.navButton}>
-              <Text style={styles.navButtonText}>Carrinho</Text>
-            </Link>
+              <Link href="/(tabs)/showCart" style={styles.navButton}>
+                <Text style={styles.navButtonText}>Carrinho</Text>
+              </Link>
 
-            {username && (
-              <>
-                <TouchableOpacity
-                  style={styles.userButton}
-                  onPress={() => setDropdownVisible(true)}
-                >
-                  <Text style={styles.userButtonText}>{username}</Text>
-                </TouchableOpacity>
-
-                {/* Dropdown Modal */}
-                <Modal
-                  visible={dropdownVisible}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setDropdownVisible(false)}
-                >
+              {username && (
+                <>
                   <TouchableOpacity
-                    style={styles.modalOverlay}
-                    onPress={() => setDropdownVisible(false)}
+                    style={styles.userButton}
+                    onPress={() => setDropdownVisible(true)}
                   >
-                    <View style={styles.dropdown}>
-                      <TouchableOpacity
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setDropdownVisible(false);
-                          router.push(`/(tabs)/listOrders?id=${userId}`);
-                        }}
-                      >
-                        <Text style={styles.dropdownText}>Meus Pedidos</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setDropdownVisible(false);
-                          handleLogout();
-                        }}
-                      >
-                        <Text style={styles.dropdownText}>Sair</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.userButtonText}>{username}</Text>
                   </TouchableOpacity>
-                </Modal>
-              </>
-            )}
-          </>
-        )}
+
+                  <Modal
+                    visible={dropdownVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setDropdownVisible(false)}
+                  >
+                    <TouchableOpacity
+                      style={styles.modalOverlay}
+                      onPress={() => setDropdownVisible(false)}
+                    >
+                      <View style={styles.dropdown}>
+                        <TouchableOpacity
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setDropdownVisible(false);
+                            router.push(`/(tabs)/listOrders?id=${userId}`);
+                          }}
+                        >
+                          <Text style={styles.dropdownText}>Meus Pedidos</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setDropdownVisible(false);
+                            handleLogout();
+                          }}
+                        >
+                          <Text style={styles.dropdownText}>Sair</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
+                </>
+              )}
+            </>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  }
+
+  return null; // Não exibe nada no mobile, a navegação é feita com as tabs
 };
 
 const styles = StyleSheet.create({

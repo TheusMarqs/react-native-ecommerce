@@ -205,16 +205,13 @@ const ListProduct: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.headerTitle}>Produtos</Text>
-      {isSuperUser == 'true' ? (
+      {isSuperUser === 'true' ? (
         <Link style={styles.newProductBtn} href="/(tabs)/createProduct">
           <Text style={styles.txtNewProduct}>Novo produto</Text>
         </Link>
       ) : null}
-
-
-      {/* Lista de Produtos */}
       <FlatList
         data={products}
         renderItem={renderItem}
@@ -222,8 +219,6 @@ const ListProduct: React.FC = () => {
         contentContainerStyle={styles.productList}
         numColumns={numColumns}
       />
-
-      {/* Modal de Compra */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -252,16 +247,12 @@ const ListProduct: React.FC = () => {
       </Modal>
       <AwesomeAlert
         show={showAlert}
-        title={alertType === 'success' ? 'Sucesso!' : alertType === 'error' ? 'Erro!' : 'Confirmação'}
+        title={alertType === 'success' ? 'Sucesso!' : 'Erro!'}
         message={alertMessage}
         closeOnTouchOutside={alertType !== 'error'}
-        closeOnHardwareBackPress={false}
         showCancelButton={alertType === 'error'}
         cancelText="Cancelar"
-        cancelButtonColor="#aaa"
-        showConfirmButton={true}
         confirmText={alertType === 'error' ? 'Excluir' : 'OK'}
-        confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
         onCancelPressed={() => setShowAlert(false)}
         onConfirmPressed={() => {
           if (confirmAction) {
@@ -272,8 +263,7 @@ const ListProduct: React.FC = () => {
         }}
       />
       <FloatingChatButton roomName={username || ''} username={username || ''} />
-
-    </ScrollView>
+    </View>
   );
 };
 

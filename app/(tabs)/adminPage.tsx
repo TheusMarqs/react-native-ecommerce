@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const adminPage: React.FC = () => {
+const AdminPage: React.FC = () => {
   const router = useRouter();
 
   return (
@@ -50,4 +50,4 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
-export default adminPage;
+export default AdminPage;

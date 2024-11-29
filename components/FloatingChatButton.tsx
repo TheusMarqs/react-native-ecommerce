@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Modal, Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 
 const FloatingChatButton = ({ roomName, username }: { roomName: string; username: string }) => {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     },
     chatContainer: {
         flex: 1,
-        width: '30%',
+        width: Platform.OS === 'web' ? '30%' : '80%',
         backgroundColor: '#fff',
         margin: 20,
         borderRadius: 10,

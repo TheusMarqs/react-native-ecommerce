@@ -26,12 +26,15 @@ export const saveUserData = async (userData: any) => {
     }
     else {
       // Salvar cada informação no SecureStore
-      await SecureStore.setItemAsync('id', userData.user_id);
+      await SecureStore.setItemAsync('id', userData.user_id.toString());
       await SecureStore.setItemAsync('username', userData.username);
       await SecureStore.setItemAsync('email', userData.email);
       await SecureStore.setItemAsync('access_token', userData.access_token);
       await SecureStore.setItemAsync('refresh_token', userData.refresh_token);
-      await SecureStore.setItemAsync('is_superuser', userData.is_superuser);
+      await SecureStore.setItemAsync(
+        'is_superuser',
+        JSON.stringify(userData.is_superuser) // Para valores booleanos
+      );
 
       console.log('Informações salvas com sucesso');
     }

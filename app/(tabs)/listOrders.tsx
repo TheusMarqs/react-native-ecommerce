@@ -160,7 +160,7 @@ const ListOrders: React.FC = () => {
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.header}>Pedidos</Text>
             {/* <Link style={styles.newOrderBtn} href="/(tabs)/createOrder">
                 <Text style={styles.buttonText}>Novo Pedido</Text>
@@ -200,7 +200,7 @@ const ListOrders: React.FC = () => {
                     setShowAlert(false);
                 }}
             />
-        </ScrollView>
+        </View>
     );
 };
 

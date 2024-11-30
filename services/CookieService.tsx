@@ -53,8 +53,15 @@ export const saveCookie = async (name: string, value: string) => {
   }
 };
 
-export const deleteCookie = (name: string) => {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+export const deleteCookie = async (name: string) => {
+  if (Platform.OS === 'web') {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+
+  else {
+    await SecureStore.deleteItemAsync(name);
+  }
+  
 };
 
 export const getCookie = async (name: string) => {

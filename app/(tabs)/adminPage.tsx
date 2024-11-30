@@ -37,7 +37,7 @@ const AdminPage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f4f4' },
   header: { fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
   button: {
     width: '80%',

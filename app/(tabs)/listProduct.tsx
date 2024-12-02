@@ -140,7 +140,7 @@ const ListProduct: React.FC = () => {
         <Link href={`/(tabs)/viewProduct?id=${item.id}`}>
           <View style={styles.productImageWrapper}>
             <Image
-              source={{ uri: 'http://127.0.0.1:8000' + item.image }}
+              source={{ uri: 'https://backend-pm.onrender.com' + item.image }}
               style={styles.productImage}
               resizeMode="cover"
             />

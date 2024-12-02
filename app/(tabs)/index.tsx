@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import SplashComponent from '../../components/SplashComponent';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
@@ -17,9 +16,8 @@ export default function HomeScreen() {
   useEffect(() => {
     // Função para verificar o login do usuário
     const verifyLogin = async () => {
-      
       const accessToken = await getCookie('access_token');
-
+      
       try {
         if (accessToken !== null) {
           console.log(accessToken);
@@ -36,6 +34,7 @@ export default function HomeScreen() {
           if (tokenResponse.status === 200) {
             console.log('User authenticated!');
             setIsLoggedIn(true);
+            setAppReady(true);
             return;
           }
 
@@ -47,51 +46,41 @@ export default function HomeScreen() {
 
             if (newToken !== null) {
               setIsLoggedIn(true);
-            }
-
-            else {
+              saveCookie('access_token', newToken);  // Armazenar o novo token
+              setAppReady(true);
+            } else {
               setIsLoggedIn(false);
+              setAppReady(true);
             }
-
           }
         } else {
           setIsLoggedIn(false);
+          setAppReady(true);
         }
       } catch (error) {
         console.log(error);
-        setIsLoggedIn(false); // Erro na verificação
+        setIsLoggedIn(false);
+        setAppReady(true);
       }
     };
 
-    // Função para carregar dados e preparar o estado
-    const prepare = async () => {
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Aguarda 3 segundos, simula o carregamento
-      await verifyLogin(); // Verifica se o usuário está logado
-      setAppReady(true); // Marca o app como pronto
-    };
+    verifyLogin();
+  }, []);
 
-    prepare();
-  }, []); // Dependências vazias para garantir que a verificação aconteça apenas uma vez
+  useEffect(() => {
+    // Redirecionar para a tela correta após o estado de login ser determinado
+    if (appReady) {
+      if (isLoggedIn) {
+        router.replace('/(tabs)/listProduct');
+      } else {
+        router.replace('/login');  // Ou a tela de login que você está usando
+      }
+    }
+  }, [appReady, isLoggedIn]);
 
   if (!appReady) {
-    return <SplashComponent />;
+    return <SplashComponent />; // Mostra a tela de splash enquanto verifica o login
   }
 
-  if (isLoggedIn === null) {
-    // Enquanto aguardamos a resposta da verificação de login
-    return <SplashComponent />;
-  }
-
-  // Se o usuário estiver logado, exibe o ProductList
-  if (isLoggedIn) {
-    return (
-      router.dismissAll(),
-      router.replace('/(tabs)/listProduct')
-    )
-  }
-
-  return (
-    router.dismissAll(),
-    router.replace('/(tabs)/login')
-  );
+  return null; // Após a verificação, o componente não renderiza nada por si só
 }

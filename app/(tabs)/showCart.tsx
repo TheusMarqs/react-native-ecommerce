@@ -118,7 +118,7 @@ const ShowCart: React.FC = () => {
   // Função para renderizar cada item do carrinho
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
-      <Image source={{ uri: item.product.image }} style={styles.itemImage} />
+      <Image source={{ uri: 'https://backend-pm.onrender.com' + item.product.image }} style={styles.itemImage} />
       <View style={styles.itemInfo}>
         <Text style={styles.itemName}>{item.product.name}</Text>
         <Text style={styles.itemPrice}>R$ {(item.product.price * item.quantity).toFixed(2)}</Text>

@@ -143,7 +143,7 @@ const ListSupplier: React.FC = () => {
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.header}>Fornecedores</Text>
             <Link style={styles.newSupplierBtn} href="/(tabs)/createSupplier">
                 <Text style={styles.buttonText}>Novo fornecedor</Text>
@@ -183,7 +183,7 @@ const ListSupplier: React.FC = () => {
                     setShowAlert(false);
                 }}
             />
-        </ScrollView>
+        </View>
     );
 };
 

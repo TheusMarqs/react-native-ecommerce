@@ -57,6 +57,7 @@ export default function Layout() {
 
   useEffect(() => {
     getUserInfo();
+    console.log(isSuperUser);
   }, []);
 
   return (
@@ -93,6 +94,11 @@ export default function Layout() {
               tabBarInactiveTintColor: 'gray',
               tabBarLabelStyle: { fontSize: 12 },
               headerRight: !isLoginOrRegister ? () => <LogoutButton onPress={() => handleLogout()} /> : undefined,
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => router.back()}>
+                  <Ionicons name="arrow-back" size={24} color="black" />
+                </TouchableOpacity>
+              ),
             };
           }}
         >
@@ -177,6 +183,13 @@ export default function Layout() {
             options={{
               href: null,
               title: 'Visualizar produto',
+            }}
+          />
+          <Tabs.Screen
+            name="qrCodeScanner"
+            options={{
+              href: null,
+              title: 'Leitor de QR codes',
             }}
           />
           <Tabs.Screen

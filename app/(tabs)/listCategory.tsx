@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { Link, router } from 'expo-router';
 import AwesomeAlert from 'react-native-awesome-alerts';
@@ -86,7 +86,7 @@ const ListCategory: React.FC = () => {
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.header}>Categorias</Text>
             <Link style={styles.newCategoryBtn} href="/(tabs)/createCategory">
                 <Text style={styles.buttonText}>Nova categoria</Text>
@@ -114,7 +114,7 @@ const ListCategory: React.FC = () => {
                 confirmButtonColor={alertType === 'success' ? '#4CAF50' : '#F44336'}
                 onConfirmPressed={() => setShowAlert(false)}
             />
-        </ScrollView>
+        </View>
     );
 };
 

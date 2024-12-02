@@ -32,6 +32,12 @@ const AdminPage: React.FC = () => {
       >
         <Text style={styles.buttonText}>Categorias</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push('/(tabs)/qrCodeScanner')}
+      >
+        <Text style={styles.buttonText}>Scanner</Text>
+      </TouchableOpacity>
     </View>
   );
 };

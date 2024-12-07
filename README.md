@@ -30,7 +30,7 @@ This is the front-end for an e-commerce platform built with React Native. The ap
 - Install React Native CLI: npm install -g react-native-cli
 
 ### Installation
-- Clone the repository: git clone https://github.com/TheusMarqs/react-native-ecommerce.git
+- Clone the repository: git clone https://github.com/TheusMarqs/React-native-ecommerce.git
 - Navigate to the project directory: cd react-native-ecommerce
 - Install dependencies: npm install
   
